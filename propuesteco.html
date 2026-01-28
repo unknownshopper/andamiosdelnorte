@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Propuesta económica | andamios.com</title>
+    <link rel="icon" href="img/icon.png" />
+    <meta name="description" content="Propuesta económica para la adquisición del sistema de gestión de andamios." />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <header class="hero">
+      <div class="container hero-inner">
+        <a class="brand" href="index.html">
+          <img class="brand-logo" src="img/logo.png" alt="andamios.com" />
+          <span class="brand-name">andamios.com</span>
+        </a>
+        <nav>
+          <a class="btn" href="index.html">Dashboard</a>
+          <a class="btn" href="orden.html">Orden</a>
+          <a class="btn" href="rentlist.html">Ordenes</a>
+          <a class="btn" href="recepcion.html">Recepción</a>
+        </nav>
+      </div>
+    </header>
+
+    <main class="container">
+      <h1>Propuesta económica</h1>
+      <p class="muted">Sistema de gestión de renta de andamios — Control por pieza, cálculo por periodo, logística y trazabilidad.</p>
+
+      <section class="grid" style="margin-top:12px;">
+        <div class="card span-7">
+          <h2>Resumen ejecutivo</h2>
+          <p>
+            Presentamos un sistema web listo para operar que digitaliza el proceso de renta de andamios: captura de órdenes,
+            cálculo automático de importes por días, estimación de transporte con mapa interactivo, validación de existencias,
+            y panel de métricas en tiempo real. Desplegado en GitHub Pages, sin fricción de instalación, 100% navegable.
+          </p>
+        </div>
+        <div class="card span-5">
+          <h2>Ventajas clave</h2>
+          <ul>
+            <li>Tiempo de cotización y generación de orden en minutos.</li>
+            <li>Menos errores: días y totales calculados automáticamente.</li>
+            <li>Logística eficiente: estimador de transporte por distancia y volumen.</li>
+            <li>Visibilidad: dashboard con ingresos, egresos y actividad.</li>
+            <li>Escalable: base lista para integrar Firestore más adelante.</li>
+          </ul>
+        </div>
+
+        <div class="card span-12">
+          <h2>Alcance y funcionalidades</h2>
+          <div class="grid" style="gap:12px;">
+            <div class="card span-4"><strong>Órdenes con partidas</strong><div class="muted">Piezas y conjuntos con validación de existencia.</div></div>
+            <div class="card span-4"><strong>Cálculo por días</strong><div class="muted">Días según Inicio/Fin; importe por partida.</div></div>
+            <div class="card span-4"><strong>Transporte</strong><div class="muted">Estimador automático editable en MXN.</div></div>
+            <div class="card span-4"><strong>Depósito</strong><div class="muted">Validación de mínimo 50% del total.</div></div>
+            <div class="card span-4"><strong>Mapa y dirección</strong><div class="muted">Leaflet + geocodificación lat/lon.</div></div>
+            <div class="card span-4"><strong>Lista de órdenes</strong><div class="muted">Ver, descargar, eliminar y exportar todo.</div></div>
+            <div class="card span-4"><strong>Dashboard</strong><div class="muted">Equipos en renta, clientes, ingresos y egresos.</div></div>
+            <div class="card span-4"><strong>Persistencia local</strong><div class="muted">Opera 100% en el navegador (demo/producción inicial).</div></div>
+            <div class="card span-4"><strong>Mantenible</strong><div class="muted">CSS y JS centralizados para agilidad.</div></div>
+            <div class="card span-4"><strong>Despliegue seguro</strong><div class="muted">GitHub Pages con HTTPS.</div></div>
+          </div>
+        </div>
+
+        <div class="card span-12">
+          <h2>Entregables</h2>
+          <ul>
+            <li>Código fuente del MVP, documentación y guía de uso.</li>
+            <li>Sitio productivo en GitHub Pages.</li>
+            <li>Capacitación breve (1 sesión remota) para operación.</li>
+          </ul>
+        </div>
+
+        <div class="card span-7">
+          <h2>Inversión económica</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>Concepto</th>
+                <th>Descripción</th>
+                <th style="width: 160px;">Monto (MXN)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Realización del sistema <br>(pago único)</td>
+                <td class="muted">Diseño y desarrollo del MVP: formularios, lógica de cálculo, mapas, validaciones, dashboard y despliegue.</td>
+                <td>$ 24,000.00</td>
+              </tr>
+              <tr>
+                <td>Implementación en infraestructura del cliente (opcional)</td>
+                <td class="muted">Instalación en su propio dominio/servidor (o infraestructura elegida), configuración, carga inicial y ajustes finos.</td>
+                <td>$ 12,000.00</td>
+              </tr>
+              <tr>
+                <td>Licencia de uso <br>(mensual, obligatoria)</td>
+                <td class="muted">Derecho de uso, actualizaciones menores y mantenimiento correctivo. Operación estándar en GitHub Pages/Firestore sin necesidad de servidor propio.</td>
+                <td>$ 2,000.00 / mes</td>
+              </tr>
+            </tbody>
+            <tfoot>
+              <tr>
+                <td colspan="2" style="text-align:right;">Subtotal promoción — realización + 6 meses de licencia sin costo</td>
+                <td>$ 24,000.00</td>
+              </tr>
+              <tr>
+                <td colspan="2" style="text-align:right;" class="muted">Desglose: Realización $ 24,000.00 + Licencia 6 meses $ 0.00</td>
+                <td class="muted">$ 24,000.00</td>
+              </tr>
+              <tr>
+                <td colspan="2" style="text-align:right;">IVA 16% (Promoción)</td>
+                <td>$ 3,840.00</td>
+              </tr>
+              <tr>
+                <td colspan="2" style="text-align:right;">Total promoción</td>
+                <td>$ 27,840.00</td>
+              </tr>
+              <tr>
+                <td colspan="3"><hr style="border:0; border-top:1px solid var(--line);" /></td>
+              </tr>
+              <tr>
+                <td colspan="2" style="text-align:right;">Subtotal 1 (realización + 1 año de licencia)</td>
+                <td>$ 48,000.00</td>
+              </tr>
+              <tr>
+                <td colspan="2" style="text-align:right;" class="muted">Realización</td>
+                <td class="muted">$ 24,000.00</td>
+              </tr>
+              <tr>
+                <td colspan="2" style="text-align:right;" class="muted">Licencia 1 año</td>
+                <td class="muted">$ 24,000.00</td>
+              </tr>
+              
+              <tr>
+                <td colspan="2" style="text-align:right;">IVA 16% (Subtotal 1)</td>
+                <td>$ 7,680.00</td>
+              </tr>
+              <tr>
+                <td colspan="2" style="text-align:right;">Total Subtotal 1</td>
+                <td>$ 55,680.00</td>
+              </tr>
+              </tr>
+              <tr>
+                <td colspan="2" style="text-align:right;">Anticipo 50% de la realización</td>
+                <td>$ 12,000.00</td>
+              </tr>
+              <tr>
+                <td colspan="3"><hr style="border:0; border-top:1px solid var(--line);" /></td>
+              </tr>
+              <tr>
+                <td colspan="2" style="text-align:right;">Subtotal 2 (realización + implementación + 1 año de licencia)</td>
+                <td>$ 60,000.00</td>
+              </tr>
+              <tr>
+                <td colspan="2" style="text-align:right;" class="muted">Realización</td>
+                <td class="muted">$ 24,000.00</td>
+              </tr>
+              <tr>
+                <td colspan="2" style="text-align:right;" class="muted">Implementación</td>
+                <td class="muted">$ 12,000.00</td>
+              </tr>
+              <tr>
+                <td colspan="2" style="text-align:right;" class="muted">Licencia 1 año</td>
+                <td class="muted">$ 24,000.00</td>
+              </tr>
+              
+              <tr>
+                <td colspan="2" style="text-align:right;">IVA 16% (Subtotal 2)</td>
+                <td>$ 9,600.00</td>
+              </tr>
+              <tr>
+                <td colspan="2" style="text-align:right;">Total Subtotal 2</td>
+                <td>$ 69,600.00</td>
+              </tr>
+              <tr>
+                <td colspan="2" style="text-align:right;">Anticipo 50% de la realización</td>
+                <td>$ 12,000.00</td>
+              </tr>
+            </tfoot>
+          </table>
+          <p class="muted">La **licencia mensual es obligatoria** y se factura de manera recurrente. <strong>Costo anual de licencia: $ 24,000.00 MXN</strong>. Puede pagarse **mes a mes** o en un **solo pago anual**. La **implementación es opcional**: el sistema puede operar en GitHub Pages/Firestore de forma inmediata sin servidor propio.</p>
+        </div>
+        <div class="card span-5">
+          <h2>Alcance futuro (en desarrollo)</h2>
+          <ul>
+            <li>Sincronización en la nube (Firestore) y multi-sucursal.</li>
+            <li>App de recepción con escaneo y evidencia fotográfica.</li>
+            <li>Reportes por cliente, obra y rentabilidad por periodo.</li>
+            <li>Roles/usuarios y bitácora de movimientos.</li>
+          </ul>
+        </div>
+
+        <div class="card span-12">
+          <h2>Tiempos y condiciones</h2>
+          <ul>
+            <li>Disponibilidad inmediata del MVP (ya desplegado para demo).</li>
+            <li>Tiempo de entrega del proyecto: <strong>1 mes</strong>.</li>
+            <li>Implementación y capacitación (si aplica): 2–3 días hábiles posteriores a la autorización.</li>
+            <li>Vigencia de la propuesta: 30 días.</li>
+            <li>Forma de pago: 50% anticipo, 50% contra entrega (para realización e implementación). Licencia: mensual o pago anual.</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="card span-12" style="margin-top:12px;">
+        <div class="actions" style="justify-content:space-between;">
+          <div class="muted">¿Dudas? Con gusto te acompañamos en la adopción.</div>
+          <div>
+            <a href="orden.html" class="btn accent">Probar el sistema</a>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container">
+        <div class="grid">
+          <div>
+            <a class="brand" href="index.html" style="display:inline-flex; gap:10px; align-items:center; text-decoration:none;">
+              <img class="footer-logo" src="img/logo.png" alt="andamios.com" />
+            </a>
+            <div class="muted" style="margin-top:8px;">Renta y venta de andamios · Control y trazabilidad por pieza</div>
+          </div>
+        </div>
+        <div class="foot-bottom">
+          <div>© 2026 andamios.com</div>
+          <div><a href="privacidad.html">Aviso de Privacidad</a></div>
+          <div class="muted">Powered by <a href="https://unknownshoppers.com" target="_blank" rel="noopener">The Unknown Shopper</a></div>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>
+
