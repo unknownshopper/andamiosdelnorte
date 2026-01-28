@@ -23,15 +23,57 @@ document.addEventListener('DOMContentLoaded', () => {
     dashboardView.style.display = '';
     if (topbar) topbar.style.display = 'block';
     if (userLabel) userLabel.textContent = email;
-    // Datos simulados
-    const renta = document.getElementById('metricRenta');
-    const clientes = document.getElementById('metricClientes');
-    const manto = document.getElementById('metricManto');
-    const flujo = document.getElementById('metricFlujo');
-    if (renta) renta.textContent = '245';
-    if (clientes) clientes.textContent = '18';
-    if (manto) manto.textContent = '7';
-    if (flujo) flujo.textContent = '$ 1.2M';
+
+    // Helpers
+    const today = new Date();
+    const parseCur = (s) => {
+      if (!s) return 0;
+      if (typeof s === 'number') return s;
+      const n = parseFloat(String(s).replace(/[^0-9,.-]/g,'').replace(/,/g,''));
+      return isNaN(n) ? 0 : n;
+    };
+    const moneyFmt = (n) => new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(n||0);
+    const readOrders = () => {
+      const keys = Object.keys(localStorage).filter(k => k.startsWith('orden_'));
+      return keys.map(k => { try { return JSON.parse(localStorage.getItem(k)||'null'); } catch { return null; } }).filter(Boolean);
+    };
+    const isActive = (o) => {
+      if (!o) return false;
+      const i = o.inicio ? new Date(o.inicio) : null;
+      const f = o.fin ? new Date(o.fin) : null;
+      if (i && i > today) return false; // aún no inicia
+      if (!f) return true; // abierta
+      return f >= today; // dentro del periodo
+    };
+
+    const orders = readOrders();
+    const active = orders.filter(isActive);
+
+    // Métrica: Equipos en renta (piezas/conjuntos totales en órdenes activas)
+    const totalItems = active.reduce((acc, o) => acc + (Array.isArray(o.partidas) ? o.partidas.reduce((s,p)=> s + ((p.sets||0)*(p.unidades||0)), 0) : 0), 0);
+
+    // Clientes activos (únicos en órdenes activas)
+    const clienteSet = new Set(active.map(o => o.cliente).filter(Boolean));
+
+    // Ingresos: suma de totales de órdenes activas
+    const ingresos = active.reduce((acc,o)=> acc + parseCur(o?.totales?.total || o?.totales?.subtotal || 0), 0);
+
+    // Egresos: configurable por localStorage (gastos_operativos); si no existe, 0
+    const egresos = parseCur(localStorage.getItem('gastos_operativos') || 0);
+
+    // Mantenimiento: sin fuente real aún -> 0 por defecto
+    const mantoOpen = 0;
+
+    const rentaEl = document.getElementById('metricRenta');
+    const clientesEl = document.getElementById('metricClientes');
+    const mantoEl = document.getElementById('metricManto');
+    const ingEl = document.getElementById('metricIngresos');
+    const egrEl = document.getElementById('metricEgresos');
+    if (rentaEl) rentaEl.textContent = String(totalItems);
+    if (clientesEl) clientesEl.textContent = String(clienteSet.size);
+    if (mantoEl) mantoEl.textContent = String(mantoOpen);
+    if (ingEl) ingEl.textContent = moneyFmt(ingresos);
+    if (egrEl) egrEl.textContent = moneyFmt(egresos);
   }
 
   // =====================

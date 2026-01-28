@@ -82,7 +82,10 @@
           <span class="brand-name">andamios.com</span>
         </a>
         <nav>
-          <a class="btn ghost" href="proyecto.html">Ver propuesta</a>
+          <a class="btn accent" href="index.html">Dashboard</a>
+          <a class="btn" href="orden.html">Orden</a>
+          <a class="btn" href="rentlist.html">Ordenes</a>
+          <a class="btn" href="recepcion.html">Recepción</a>
         </nav>
       </div>
     </header>
@@ -134,9 +137,12 @@
             <div class="muted">OT abiertas</div>
           </div>
           <div class="card span-6 dash">
-            <h3>Ingresos / egresos</h3>
-            <div class="metric" id="metricFlujo">—</div>
-            <div class="muted">Periodo actual</div>
+            <h3>Flujo</h3>
+            <div style="display:flex; flex-direction:column; gap:8px; align-items:center;">
+              <div>Ingresos: <strong id="metricIngresos">—</strong></div>
+              <div>Egresos: <strong id="metricEgresos">—</strong></div>
+            </div>
+            <div class="muted">Basado en órdenes abiertas</div>
           </div>
         </div>
       </section>
