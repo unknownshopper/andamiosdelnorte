@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Equipos en renta | andamios.com</title>
+    <link rel="icon" href="img/icon.png" />
+    <meta name="description" content="Listado de órdenes de renta guardadas localmente." />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <header class="hero">
+      <div class="container hero-inner">
+        <a class="brand" href="index.html">
+          <img class="brand-logo" src="img/logo.png" alt="andamios.com" />
+          <span class="brand-name">andamios.com</span>
+        </a>
+        <nav>
+          <a class="btn" href="orden.html">Nueva orden</a>
+        </nav>
+      </div>
+    </header>
+
+    <main class="container">
+      <h1>Equipos en renta</h1>
+      <p class="muted">Listado de órdenes guardadas en este dispositivo (localStorage).</p>
+
+      <section class="card span-12">
+        <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:8px;">
+          <div class="muted">Haz clic en una fila para ver más detalles o usa las acciones.</div>
+          <div style="display:flex; gap:8px;">
+            <a href="orden.html" class="btn accent">Nueva orden</a>
+            <button id="exportAll" class="btn">Exportar todo</button>
+          </div>
+        </div>
+        <div style="overflow:auto;">
+          <table>
+            <thead>
+              <tr>
+                <th>Folio</th>
+                <th>Cliente</th>
+                <th>Obra</th>
+                <th>Inicio</th>
+                <th>Fin</th>
+                <th>Total</th>
+                <th>Estado</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="ordersBody"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container">
+        <div class="grid">
+          <div>
+            <a class="brand" href="index.html" style="display:inline-flex; gap:10px; align-items:center; text-decoration:none;">
+              <img class="footer-logo" src="img/logo.png" alt="andamios.com" />
+            </a>
+            <div class="muted" style="margin-top:8px;">Renta y venta de andamios · Control y trazabilidad por pieza</div>
+          </div>
+        </div>
+        <div class="foot-bottom">
+          <div>© 2026 andamios.com</div>
+          <div><a href="privacidad.html">Aviso de Privacidad</a></div>
+          <div class="muted">Powered by <a href="https://unknownshoppers.com" target="_blank" rel="noopener">The Unknown Shopper</a></div>
+        </div>
+      </div>
+    </footer>
+
+  
+  </body>
+</html>

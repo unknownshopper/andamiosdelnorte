@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Inventario | andamios.com</title>
+    <link rel="icon" href="img/icon.png" />
+    <link rel="stylesheet" href="style.css" />
+    
+  </head>
+  <body>
+    <header class="hero">
+      <div class="container hero-inner">
+        <a class="brand" href="index.html">
+          <img class="brand-logo" src="img/logo.png" alt="andamios.com" />
+          <span class="brand-name">andamios.com</span>
+        </a>
+        <nav>
+          <a class="btn" href="index.html">Dashboard</a>
+          <a class="btn" href="orden.html">Orden</a>
+          <a class="btn" href="rentlist.html">Ordenes</a>
+          <a class="btn" href="recepcion.html">Recepción</a>
+          <a class="btn accent" href="inv.html">Inventario</a>
+        </nav>
+      </div>
+    </header>
+
+    <main class="container">
+      <section class="card">
+        <h2>Inventario de piezas</h2>
+        <div class="muted">Catálogo de componentes de andamios por pieza, con imagen, tarifa, peso y stock.</div>
+        <div class="note">Las imágenes y datos se poblarán desde el brochure. Puedes actualizar URLs y tarifas más adelante.</div>
+
+        <div class="filters">
+          <input id="invSearch" type="search" placeholder="Buscar por código, pieza o medida..." />
+          <select id="invCategoria">
+            <option value="">Todas las categorías</option>
+            <option value="marcos">Marcos</option>
+            <option value="plataformas">Plataformas</option>
+            <option value="crucetas">Crucetas</option>
+            <option value="bases">Bases / Nivelación</option>
+            <option value="ruedas">Ruedas</option>
+            <option value="abrazaderas">Abrazaderas / Acoples</option>
+            <option value="tubos">Tubos</option>
+            <option value="otros">Otros</option>
+          </select>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Imagen</th>
+                <th>Código</th>
+                <th>Pieza</th>
+                <th class="hide-sm">Medida</th>
+                <th>Unidad</th>
+                <th class="hide-sm">Peso</th>
+                <th>Tarifa</th>
+                <th>Stock</th>
+              </tr>
+            </thead>
+            <tbody id="invBody"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container">
+        <div class="grid">
+          <div>
+            <a class="brand" href="index.html" style="display:inline-flex; gap:10px; align-items:center; text-decoration:none;">
+              <img class="footer-logo" src="img/logo.png" alt="andamios.com" />
+            </a>
+            <div class="muted" style="margin-top:8px;">Renta y venta de andamios · Control y trazabilidad por pieza</div>
+          </div>
+        </div>
+        <div class="foot-bottom">
+          <div>© 2026 andamios.com</div>
+          <div><a href="privacidad.html">Aviso de Privacidad</a></div>
+          <div class="muted">Powered by <a href="https://unknownshoppers.com" target="_blank" rel="noopener">The Unknown Shopper</a></div>
+        </div>
+      </div>
+    </footer>
+    <script src="./script.js"></script>
+  </body>
+</html>

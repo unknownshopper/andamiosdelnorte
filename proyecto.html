@@ -1,0 +1,330 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Propuesta de Sistema | Control de Renta de Andamios</title>
+    <link rel="icon" href="img/icon.png" />
+    <meta name="description" content="Propuesta de solución para control integral de renta de andamios: órdenes, inventario por pieza, recepción, inspección, mantenimiento y facturación por pieza." />
+    <link rel="stylesheet" href="style.css" />
+    <style>
+      :root {
+        --bg: #ffffff;
+        --surface: #ffffff;
+        --ink: #0f172a; /* slate-900 */
+        --muted: #475569; /* slate-600 */
+        --line: #e2e8f0; /* slate-200 */
+        --accent: #0ea5a4; /* teal-500 */
+        --accent-ink: #0b4f4f;
+        --chip: #0f172a;
+      }
+
+      * { box-sizing: border-box; }
+      html, body { height: 100%; }
+      body {
+        margin: 0;
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Noto Sans, Ubuntu, Cantarell, Helvetica Neue, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+        color: var(--ink);
+        background: var(--bg);
+        line-height: 1.6;
+        font-size: 16px;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+
+      .container { max-width: 1080px; margin: 0 auto; padding: 0 20px; }
+
+      header.hero {
+        border-bottom: 1px solid var(--line);
+        background: var(--surface);
+      }
+      .hero-inner { padding: 56px 0 28px; }
+      .brand {
+        display: inline-flex;
+        gap: 10px;
+        align-items: center;
+        text-decoration: none;
+        color: inherit;
+      }
+      .brand-logo { height: 36px; display: inline-block; }
+      .brand-name { font-weight: 700; letter-spacing: 0.4px; font-size: 14px; text-transform: uppercase; color: var(--muted); }
+
+      h1 { font-size: 36px; line-height: 1.2; margin: 14px 0 8px; }
+      .subtitle { color: var(--muted); font-size: 18px; margin-bottom: 20px; }
+
+      .chips { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
+      .chip { border: 1px dashed var(--line); color: var(--chip); padding: 6px 10px; border-radius: 6px; font-size: 12px; letter-spacing: .2px; }
+
+      nav.toc {
+        position: sticky; top: 0; z-index: 5;
+        border-top: 1px solid var(--line);
+        border-bottom: 1px solid var(--line);
+        background: var(--surface);
+      }
+      nav.toc .toc-inner { display: flex; gap: 16px; overflow: auto; padding: 10px 0; }
+      nav.toc a { color: var(--muted); text-decoration: none; padding: 6px 10px; border-radius: 6px; white-space: nowrap; }
+      nav.toc a:hover { background: #f8fafc; color: var(--ink); }
+
+      section { padding: 42px 0; border-bottom: 1px solid var(--line); }
+      section:last-of-type { border-bottom: none; }
+      h2 { font-size: 26px; margin: 0 0 14px; }
+      p { margin: 8px 0 12px; }
+
+      ul { margin: 10px 0 10px 18px; padding: 0; }
+      li { margin: 6px 0; }
+
+      .cards { display: grid; grid-template-columns: repeat(12, 1fr); gap: 16px; }
+      .card { grid-column: span 12; border: 1px solid var(--line); border-radius: 10px; padding: 18px; background: var(--surface); }
+      .card h3 { margin: 0 0 8px; font-size: 18px; }
+      .kpi { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+      .kpi div { border: 1px solid var(--line); border-radius: 8px; padding: 12px; }
+      .muted { color: var(--muted); }
+
+      .cta {
+        display: flex; gap: 12px; flex-wrap: wrap; margin-top: 10px;
+      }
+      .btn { appearance: none; border: 1px solid var(--ink); background: #fff; color: var(--ink); padding: 10px 14px; border-radius: 8px; cursor: pointer; text-decoration: none; font-weight: 600; }
+      .btn.accent { background: var(--accent); color: #fff; border-color: var(--accent); }
+      .btn:hover { filter: brightness(0.98); }
+
+      footer { padding: 40px 0; color: var(--muted); }
+
+      @media (min-width: 720px) {
+        .card.span-6 { grid-column: span 6; }
+        .card.span-4 { grid-column: span 4; }
+        .kpi { grid-template-columns: repeat(4, 1fr); }
+      }
+      /* Notas, footer y contacto: centralizados en style.css */
+    </style>
+  </head>
+  <body>
+    <header class="hero">
+      <div class="container hero-inner">
+        <a class="brand" href="#top">
+          <img class="brand-logo" src="img/logo.png" alt="andamios.com" />
+          <span class="brand-name">andamios.com · propuesta</span>
+        </a>
+        <h1>Control integral de renta de andamios</h1>
+        <div class="subtitle">Órdenes, inventario por pieza, recepción e inspección, mantenimiento y facturación por pieza, con tiempos de respuesta rápidos y ajustes económicos precisos.</div>
+        <div class="chips">
+          <span class="chip">Inventario por pieza</span>
+          <span class="chip">Recepción con inspección</span>
+          <span class="chip">Tarifas y ajustes automáticos</span>
+          <span class="chip">Trazabilidad</span>
+          <span class="chip">PWA con QR</span>
+        </div>
+        <div class="cta">
+          <a href="#resumen" class="btn accent">Ver resumen</a>
+          <a href="#roadmap" class="btn">Roadmap</a>
+        </div>
+      </div>
+      <nav class="toc">
+        <div class="container toc-inner">
+          <a href="#resumen">Resumen</a>
+          <a href="#alcance">Alcance</a>
+          <a href="#flujos">Flujos</a>
+          <a href="#modelo">Modelo de datos</a>
+          <a href="#tecnologia">Tecnología</a>
+          <a href="#reportes">Reportes</a>
+          <a href="#roadmap">Roadmap</a>
+          <a href="#estimacion">Estimación</a>
+          <a href="#riesgos">Riesgos</a>
+          <a href="#proximos">Próximos pasos</a>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container" id="top">
+      <section id="resumen">
+        <h2>Resumen ejecutivo</h2>
+        <p><strong>Objetivo:</strong> Implementar un sistema integral para controlar la renta de andamios, desde órdenes de compra/renta hasta recepción, inspección, mantenimiento/sustitución y facturación con cobro por pieza.</p>
+        <ul>
+          <li><strong>Control total</strong> de inventario por pieza y por conjunto.</li>
+          <li><strong>Recepciones rápidas</strong> con inspección, evidencia y ajustes económicos automáticos.</li>
+          <li><strong>Trazabilidad</strong> de piezas (QR/RFID) para mantenimiento y sustituciones.</li>
+          <li><strong>Facturación precisa</strong> por periodos, ubicaciones y estado de piezas.</li>
+        </ul>
+      </section>
+
+      <section id="alcance">
+        <h2>Alcance funcional</h2>
+        <div class="cards">
+          <div class="card span-6">
+            <h3>Catálogo y BOM</h3>
+            <p class="muted">Piezas y conjuntos (marcos, crucetas, plataformas, abrazaderas, bases, ruedas) con equivalencias y compatibilidades.</p>
+          </div>
+          <div class="card span-6">
+            <h3>Clientes y ubicaciones</h3>
+            <p class="muted">Jerarquía cliente → proyecto/obra → frente/ubicación.</p>
+          </div>
+          <div class="card span-6">
+            <h3>Órdenes de renta/compra</h3>
+            <p class="muted">Creación, aprobación, montos, periodos (diario/semanal/quincenal/mensual), depósitos, tarifas por pieza y conjunto.</p>
+          </div>
+          <div class="card span-6">
+            <h3>Tarifas y reglas</h3>
+            <p class="muted">Precios base, prorrateos, mínimos, daños/pérdida, limpieza, mantenimiento y reposición.</p>
+          </div>
+          <div class="card span-6">
+            <h3>Entrega y recepción</h3>
+            <p class="muted">Entrega con checklist y fotos. Recepción con escaneo por pieza, estado (ok, daño, pérdida, sustitución) y ajustes automáticos.</p>
+          </div>
+          <div class="card span-6">
+            <h3>Identificación y trazabilidad</h3>
+            <p class="muted">Etiquetas QR (fase 1) y opción RFID UHF (fase 2). Historial de uso, mantenimiento y movimientos.</p>
+          </div>
+          <div class="card span-6">
+            <h3>Mantenimiento y sustituciones</h3>
+            <p class="muted">Órdenes de trabajo, clasificación de fallas, costos, tiempos fuera de servicio.</p>
+          </div>
+          <div class="card span-6">
+            <h3>Inventario y logística</h3>
+            <p class="muted">Existencias por almacén/obra, transferencias, conteos cíclicos, alertas de faltantes.</p>
+          </div>
+          <div class="card span-6">
+            <h3>Facturación y cobranza</h3>
+            <p class="muted">Facturas por periodo y ubicación, cargos por pieza/daño/pérdida, notas de crédito, conciliación.</p>
+          </div>
+          <div class="card span-6">
+            <h3>Reportes y KPIs</h3>
+            <p class="muted">Utilización, rotación, pérdidas por obra, TAT de recepción, costo de mantenimiento, margen por proyecto.</p>
+          </div>
+          <div class="card span-6">
+            <h3>Seguridad y auditoría</h3>
+            <p class="muted">Roles, permisos y bitácora de cambios.</p>
+          </div>
+          <div class="card span-6">
+            <h3>Integraciones</h3>
+            <p class="muted">ERP/contabilidad (clientes, CFDI), bancos (pagos), BI.</p>
+          </div>
+        </div>
+      </section>
+
+      <section id="flujos">
+        <h2>Flujos clave</h2>
+        <ul>
+          <li><strong>Alta de pedido:</strong> obra, periodo, piezas/conjuntos, tarifas, depósito.</li>
+          <li><strong>Entrega:</strong> preparación en almacén, escaneo de salida, evidencia, salida de inventario.</li>
+          <li><strong>Recepción e inspección:</strong> escaneo masivo, estado por pieza, evidencia, cálculo de cargos y propuesta de ajuste.</li>
+          <li><strong>Mantenimiento:</strong> orden de trabajo, refacciones, retorno a servicio.</li>
+          <li><strong>Facturación:</strong> periodificación, prorrateo, cargos por pieza (daño/pérdida/sustitución), emisión.</li>
+        </ul>
+      </section>
+
+      <section id="modelo">
+        <h2>Modelo de datos (alto nivel)</h2>
+        <ul>
+          <li><strong>Entidades:</strong> Cliente, Obra, Ubicación, Pieza, Conjunto (BOM), Lote/Serie, OrdenRenta, Entrega, Recepción, Inspección, MantenimientoOT, Tarifa, Ajuste, Factura, Usuario.</li>
+          <li><strong>Identificación de pieza:</strong> <code>Pieza{id, tipo, estado, etiqueta(QR/RFID), historial[]}</code>.</li>
+        </ul>
+      </section>
+
+      <section id="tecnologia">
+        <h2>Tecnología propuesta</h2>
+        <ul>
+          <li><strong>Frontend:</strong> Web responsive + PWA para almacén/obra (escaneo QR con cámara).</li>
+          <li><strong>Backend/API:</strong> Node.js (NestJS) o Python (Django/DRF).</li>
+          <li><strong>Base de datos:</strong> PostgreSQL (JSONB, particionado por periodos).</li>
+          <li><strong>Etiquetado:</strong> QR (fase 1), RFID UHF opcional (fase 2) para lotes/pallets.</li>
+          <li><strong>Infra:</strong> Nube (AWS/Azure/GCP), backups y cifrado en tránsito/ reposo.</li>
+          <li><strong>Seguridad:</strong> SSO opcional, MFA, RBAC, auditoría.</li>
+        </ul>
+      </section>
+
+      <section id="reportes">
+        <h2>Reportes y KPIs</h2>
+        <div class="kpi">
+          <div>
+            <strong>Utilización por obra</strong>
+            <div class="muted">% uso por periodo</div>
+          </div>
+          <div>
+            <strong>Diferencias entrega vs. recepción</strong>
+            <div class="muted">piezas faltantes/extra</div>
+          </div>
+          <div>
+            <strong>Costo de daño/pérdida</strong>
+            <div class="muted">por cliente/obra</div>
+          </div>
+          <div>
+            <strong>MTBF/MTTR</strong>
+            <div class="muted">por tipo de pieza</div>
+          </div>
+          <div>
+            <strong>Rotación de inventario</strong>
+            <div class="muted">y obsolescencia</div>
+          </div>
+          <div>
+            <strong>Margen</strong>
+            <div class="muted">por proyecto/periodo</div>
+          </div>
+        </div>
+      </section>
+
+      <section id="roadmap">
+        <h2>Roadmap de implementación</h2>
+        <ul>
+          <li><strong>Fase 0 – Descubrimiento (2–3 semanas):</strong> reglas de negocio, catálogo de piezas, políticas de cargos, integraciones.</li>
+          <li><strong>Fase 1 – Core Renta (6–8 semanas):</strong> órdenes, inventario, entregas/recepciones, tarifas, facturación base, PWA con QR.</li>
+          <li><strong>Fase 2 – Mantenimiento y KPIs (4–6 semanas):</strong> OT, analítica y tableros, alertas.</li>
+          <li><strong>Fase 3 – Integraciones y RFID (4–6 semanas):</strong> ERP, pagos, RFID selectivo.</li>
+        </ul>
+      </section>
+
+      <section id="estimacion">
+        <h2>Estimación de inversión (referencial)</h2>
+        <ul>
+          <li><strong>Implementación:</strong> 10–16 semanas.</li>
+          <li><strong>Costo:</strong> a definir según alcance final e integraciones (licencia + setup o proyecto cerrado tras Fase 0).</li>
+        </ul>
+      </section>
+
+      <section id="riesgos">
+        <h2>Supuestos y riesgos</h2>
+        <ul>
+          <li><strong>Calidad de datos:</strong> Catálogo/BOM y estados iniciales requieren depuración.</li>
+          <li><strong>Adopción operativa:</strong> Capacitación a almacén y obra.</li>
+          <li><strong>Integraciones:</strong> Dependencias del ERP/contabilidad.</li>
+          <li><strong>Hardware:</strong> Impresoras de etiquetas y lector QR; RFID en fase posterior.</li>
+        </ul>
+      </section>
+
+      <section id="proximos">
+        <h2>Próximos pasos</h2>
+        <ul>
+          <li><strong>Workshop de levantamiento:</strong> Definir reglas de cobro por pieza, causales de daño, prorrateos, depósitos, SLA de recepción.</li>
+          <li><strong>Inventario inicial:</strong> Estrategia de etiquetado y carga de catálogo.</li>
+          <li><strong>Prueba piloto:</strong> 1 almacén + 1–2 obras.</li>
+          <li><strong>Propuesta comercial final:</strong> Tras Fase 0.</li>
+        </ul>
+        <p><strong>Datos requeridos:</strong></p>
+        <ul>
+          <li>Volumen mensual (órdenes, piezas, obras activas).</li>
+          <li>Reglas de cobro por daño/pérdida/sustitución.</li>
+          <li>ERP/contabilidad a integrar y requisitos fiscales (CFDI, moneda, IVA).</li>
+          <li>Preferencia por QR y evaluación de RFID en Fase 2.</li>
+        </ul>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container">
+        <div class="grid">
+          <div>
+            <a class="brand" href="index.html" style="display:inline-flex; gap:10px; align-items:center; text-decoration:none;">
+              <img class="footer-logo" src="img/logo.png" alt="andamios.com" />
+            </a>
+            <div class="muted" style="margin-top:8px;">Renta y venta de andamios · Control y trazabilidad por pieza</div>
+          </div>
+        </div>
+        <div class="foot-bottom">
+          <div>© 2026 andamios.com</div>
+          <div><a href="privacidad.html">Aviso de Privacidad</a></div>
+          <div class="muted">Powered by <a href="https://unknownshoppers.com" target="_blank" rel="noopener">The Unknown Shopper</a></div>
+        </div>
+      </div>
+    </footer>
+    <script src="script.js"></script>
+  </body>
+  </html>
+

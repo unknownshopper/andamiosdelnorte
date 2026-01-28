@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Recepción e inspección | andamios.com</title>
+    <link rel="icon" href="img/icon.png" />
+    <link rel="stylesheet" href="style.css" />
+    <meta name="description" content="Formulario de inspección de recepción de andamios y componentes." />
+    <style>
+      :root {
+        --bg: #ffffff;
+        --surface: #ffffff;
+        --ink: #0f172a;
+        --muted: #475569;
+        --line: #e2e8f0;
+        --accent: #0ea5a4;
+      }
+
+      * { box-sizing: border-box; }
+      html, body { height: 100%; }
+      body { margin: 0; font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Noto Sans, Ubuntu, Cantarell, Helvetica Neue, Arial; color: var(--ink); background: var(--bg); line-height: 1.6; }
+      .container { max-width: 1080px; margin: 0 auto; padding: 0 20px; }
+
+      header.hero { border-bottom: 1px solid var(--line); background: var(--surface); }
+      .hero-inner { padding: 28px 0; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+      .brand { display: inline-flex; gap: 10px; align-items: center; text-decoration: none; color: inherit; }
+      .brand-mark { width: 36px; height: 36px; border: 2px solid var(--ink); border-radius: 6px; position: relative; }
+      .brand-mark::before, .brand-mark::after { content: ""; position: absolute; background: var(--ink); width: 60%; height: 2px; left: 20%; top: 50%; }
+      .brand-mark::before { transform: rotate(30deg); }
+      .brand-mark::after { transform: rotate(-30deg); }
+      .brand-logo { height: 28px; display: inline-block; }
+      .brand-name { font-weight: 700; letter-spacing: 0.4px; font-size: 14px; text-transform: uppercase; color: var(--muted); }
+
+      nav a.btn { appearance: none; border: 1px solid var(--line); background: #fff; color: var(--muted); padding: 8px 12px; border-radius: 8px; text-decoration: none; font-weight: 600; margin-left: 8px; }
+      .btn.primary { border-color: var(--accent); background: var(--accent); color: #fff; }
+      .btn { appearance: none; border: 1px solid var(--ink); background: #fff; color: var(--ink); padding: 10px 14px; border-radius: 8px; cursor: pointer; text-decoration: none; font-weight: 600; }
+      .btn.accent { background: var(--accent); color: #fff; border-color: var(--accent); }
+      .btn.ghost { border-color: var(--line); color: var(--muted); }
+
+      main { padding: 32px 0 60px; }
+      h1 { margin: 0 0 10px; font-size: 26px; }
+      .muted { color: var(--muted); }
+      .grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 16px; }
+      .card { grid-column: span 12; border: 1px solid var(--line); border-radius: 10px; padding: 18px; background: var(--surface); }
+      .card h2 { font-size: 18px; margin: 0 0 12px; }
+
+      .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+      .row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+      label { font-weight: 600; font-size: 13px; color: var(--muted); }
+      input, select, textarea { width: 100%; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; font-size: 15px; }
+      textarea { min-height: 90px; resize: vertical; }
+
+      table { width: 100%; border-collapse: collapse; }
+      th, td { padding: 10px; border-bottom: 1px solid var(--line); text-align: left; }
+      th { font-size: 13px; color: var(--muted); font-weight: 700; }
+      tfoot td { font-weight: 700; }
+
+      .totals { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+      .totals .box { border: 1px solid var(--line); border-radius: 10px; padding: 14px; }
+      .k { font-size: 12px; color: var(--muted); }
+      .v { font-size: 28px; font-weight: 800; }
+
+      /* Notas / pie de página */
+      .note { font-size: 12px; color: var(--muted); font-style: italic; margin-top: 6px; }
+      .note::before { content: '* '; color: var(--muted); }
+
+      @media (min-width: 820px) {
+        .card.span-6 { grid-column: span 6; }
+      }
+      /* Footer y contacto centralizados en style.css */
+    </style>
+  </head>
+  <body>
+    <header class="hero">
+      <div class="container hero-inner">
+        <a class="brand" href="index.html">
+          <img class="brand-logo" src="img/logo.png" alt="andamios.com" />
+          <span class="brand-name">andamios.com</span>
+        </a>
+        <nav>
+          <a class="btn" href="index.html">Dashboard</a>
+          <a class="btn" href="proyecto.html">Propuesta</a>
+          <a class="btn" href="inv.html">Inventario</a>
+          <a class="btn" href="orden.html">Orden</a>
+        </nav>
+      </div>
+    </header>
+
+    <main class="container">
+      <h1>Recepción e inspección</h1>
+      <p class="muted">Registra cada pieza recibida, su estado y cargos correspondientes. Datos guardados de forma simulada en el navegador.</p>
+
+      <form id="recepForm" class="grid" autocomplete="off">
+        <section class="card span-6">
+          <h2>Datos generales</h2>
+          <div class="row">
+            <div>
+              <label for="ordenId">Orden de renta</label>
+              <input id="ordenId" name="ordenId" placeholder="ID / referencia de orden" required />
+            </div>
+            <div>
+              <label for="fecha">Fecha de recepción</label>
+              <input id="fecha" name="fecha" type="date" required />
+            </div>
+          </div>
+          <div class="row">
+            <div>
+              <label for="almacen">Almacén</label>
+              <input id="almacen" name="almacen" placeholder="Nombre de almacén" />
+            </div>
+            <div>
+              <label for="inspector">Inspector</label>
+              <input id="inspector" name="inspector" placeholder="Nombre del inspector" />
+            </div>
+          </div>
+        </section>
+
+        <section class="card span-6">
+          <h2>Resumen de inspección</h2>
+          <div class="totals">
+            <div class="box"><div class="k">OK</div><div class="v" id="tOk">0</div></div>
+            <div class="box"><div class="k">Daño</div><div class="v" id="tDanio">0</div></div>
+            <div class="box"><div class="k">Pérdida</div><div class="v" id="tPerdida">0</div></div>
+            <div class="box"><div class="k">Sustitución</div><div class="v" id="tSust">0</div></div>
+          </div>
+          <div style="margin-top:12px;">
+            <div class="k">Cargos</div>
+            <div class="v" id="tCargo">$ 0.00</div>
+          </div>
+        </section>
+
+        <section class="card span-12">
+          <h2>Piezas inspeccionadas</h2>
+          <div style="overflow:auto;">
+            <table>
+              <thead>
+                <tr>
+                  <th>QR / Serie</th>
+                  <th>Tipo</th>
+                  <th>Estado</th>
+                  <th>Notas</th>
+                  <th>Cargo</th>
+                  <th>Evidencia (URL)</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="itemsBody"></tbody>
+              <tfoot>
+                <tr>
+                  <td colspan="7">
+                    <button class="btn" type="button" id="addItem">Agregar pieza</button>
+                  </td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </section>
+
+        <section class="card span-12">
+          <div class="row">
+            <div>
+              <label for="observ">Observaciones generales</label>
+              <textarea id="observ" name="observ" placeholder="Notas generales de la recepción, hallazgos, etc."></textarea>
+            </div>
+            <div>
+              <label for="firma">Recibido por</label>
+              <input id="firma" name="firma" placeholder="Nombre y cargo" />
+            </div>
+          </div>
+          <div class="actions" style="display:flex; gap:10px; justify-content:flex-end;">
+            <a class="btn ghost" href="index.html">Cancelar</a>
+            <button class="btn accent" type="submit">Guardar inspección</button>
+          </div>
+        </section>
+      </form>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container">
+        <div class="grid">
+          <div>
+            <a class="brand" href="index.html" style="display:inline-flex; gap:10px; align-items:center; text-decoration:none;">
+              <img class="footer-logo" src="img/logo.png" alt="andamios.com" />
+            </a>
+            <div class="muted" style="margin-top:8px;">Renta y venta de andamios · Control y trazabilidad por pieza</div>
+          </div>
+        </div>
+        <div class="foot-bottom">
+          <div>© 2026 andamios.com</div>
+          <div><a href="privacidad.html">Aviso de Privacidad</a></div>
+          <div class="muted">Powered by <a href="https://unknownshoppers.com" target="_blank" rel="noopener">The Unknown Shopper</a></div>
+        </div>
+      </div>
+    </footer>
+    <script src="script.js"></script>
+  </body>
+  </html>
+

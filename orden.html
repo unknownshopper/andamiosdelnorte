@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Nueva Orden de Renta | andamios.com</title>
+    <link rel="icon" href="img/icon.png" />
+    <link rel="stylesheet" href="style.css" />
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+      crossorigin=""
+    />
+    <script
+      src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+      integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+      crossorigin=""
+    ></script>
+    <meta name="description" content="Formulario para crear órdenes de renta de andamios." />
+   
+  </head>
+  <body>
+    <header class="hero">
+      <div class="container hero-inner">
+        <a class="brand" href="index.html">
+          <img class="brand-logo" src="img/logo.png" alt="andamios.com" />
+          <span class="brand-name">andamios.com</span>
+        </a>
+        <nav>
+          <a class="btn" href="index.html">Dashboard</a>
+          <a class="btn" href="rentlist.html">Ordenes</a>
+          <a class="btn" href="recepcion.html">Recepción</a>
+          <a class="btn" href="inv.html">Inventario</a>
+
+
+        </nav>
+      </div>
+    </header>
+
+    <main class="container">
+      <h1>Nueva orden de renta</h1>
+      <p class="muted">Completa la información para generar la orden. Los datos se guardarán localmente de forma simulada.</p>
+
+      <form id="ordenForm" class="grid" autocomplete="off">
+        <section class="card span-6">
+          <h2>Cliente y obra</h2>
+          <div class="row">
+            <div>
+              <label for="cliente">Cliente</label>
+              <input id="cliente" name="cliente" placeholder="Razón social / Cliente" required />
+            </div>
+            <div>
+              <label for="obra">Obra / Proyecto</label>
+              <input id="obra" name="obra" placeholder="Nombre de la obra" required />
+            </div>
+          </div>
+          <div class="row">
+            <div>
+              <label for="contactoNombre">Contacto - Nombre</label>
+              <input id="contactoNombre" name="contactoNombre" placeholder="Nombre completo" />
+            </div>
+            <div>
+              <label for="contactoTelefono">Contacto - Teléfono</label>
+              <input id="contactoTelefono" name="contactoTelefono" placeholder="Ej. +52 55 1234 5678" />
+            </div>
+          </div>
+          <div class="row">
+            <div>
+              <label for="inicio">Inicio</label>
+              <input id="inicio" name="inicio" type="date" required />
+            </div>
+            <div>
+              <label for="fin">Fin</label>
+              <input id="fin" name="fin" type="date" />
+            </div>
+          </div>
+          <div class="row">
+            <div>
+              <label for="orderId">Folio de orden</label>
+              <input id="orderId" name="orderId" placeholder="OR-000000" readonly />
+            </div>
+            <div>
+              <label for="ubicacion">Ubicación</label>
+              <input id="ubicacion" name="ubicacion" placeholder="Dirección / Frente" />
+            </div>
+          </div>
+          <div class="row">
+            <div>
+              <label for="latitud">Latitud</label>
+              <input id="latitud" name="latitud" placeholder="19.4326" />
+            </div>
+            <div>
+              <label for="longitud">Longitud</label>
+              <input id="longitud" name="longitud" placeholder="-99.1332" />
+            </div>
+          </div>
+          
+        </section>
+
+        <section class="card span-6">
+          <h2>Mapa</h2>
+          <div class="muted" style="margin-bottom:6px;">Toca para seleccionar ubicación y autocompletar dirección</div>
+          <div style="border:1px solid var(--line); border-radius:8px; overflow:hidden; height:360px;">
+            <div id="map" style="height:100%; width:100%;"></div>
+          </div>
+        </section>
+
+        
+
+        <section class="card span-12">
+          <h2>Partidas (piezas / conjuntos)</h2>
+          <div class="row" style="align-items:end;">
+            <div>
+              <label for="tipoPartida">Tipo</label>
+              <select id="tipoPartida">
+                <option value="conjunto" selected>Conjunto</option>
+                <option value="pieza">Pieza</option>
+              </select>
+            </div>
+            <div>
+              <label for="itemSelect">Elemento</label>
+              <select id="itemSelect">
+                <option value="">Seleccionar…</option>
+              </select>
+              <div class="existencia-hint" id="existenciaHint">Existencia: —</div>
+            </div>
+            <div>
+              <label for="conjuntoQty">Cantidad</label>
+              <input id="conjuntoQty" type="number" min="1" step="1" value="1" />
+            </div>
+            <div>
+              <button type="button" class="btn" id="agregarItem">Agregar</button>
+            </div>
+          </div>
+          <div style="overflow:auto;">
+            <table id="partidasTabla">
+              <colgroup>
+                <col style="width: 90px;" />
+                <col style="width: 120px;" />
+                <col style="width: auto;" />
+                <col style="width: 90px;" />
+                <col style="width: 110px;" />
+                <col style="width: 80px;" />
+                <col style="width: 120px;" />
+                <col style="width: 110px;" />
+              </colgroup>
+              <thead>
+                <tr>
+                  <th>Cantidad</th>
+                  <th>Tipo</th>
+                  <th>Descripción</th>
+                  <th>Unidades</th>
+                  <th>Tarifa</th>
+                  <th>Días</th>
+                  <th>Importe</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="partidasBody"></tbody>
+              <tfoot>
+                <tr>
+                  <td colspan="5" style="text-align:right;">Subtotal</td>
+                  <td id="subtotal">$ 0.00</td>
+                  <td></td>
+                </tr>
+                <tr>
+                  <td colspan="5" style="text-align:right;">Transporte (carga y descarga)</td>
+                  <td>
+                    <input id="transporteInput" type="text" inputmode="decimal" placeholder="$ 0.00" value="$ 0.00" />
+                  </td>
+                  <td></td>
+                </tr>
+                <tr>
+                  <td colspan="5" style="text-align:right;">IVA 16%</td>
+                  <td id="iva">$ 0.00</td>
+                  <td></td>
+                </tr>
+                <tr>
+                  <td colspan="5" style="text-align:right;">Total</td>
+                  <td id="total">$ 0.00</td>
+                  <td></td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+          <div class="row" style="margin-top:12px; gap:16px;">
+            <div>
+              <label for="deposito">Depósito (mín. 50%)</label>
+              <input id="deposito" name="deposito" type="number" step="0.01" placeholder="0.00" required />
+            </div>
+            <div>
+              <label for="tipoPagoDeposito">Tipo de pago del depósito</label>
+              <select id="tipoPagoDeposito" name="tipoPagoDeposito" required>
+                <option value="transferencia" selected>Transferencia</option>
+                <option value="tarjeta">Tarjeta</option>
+                <option value="efectivo">Efectivo</option>
+              </select>
+            </div>
+          </div>
+
+        </section>
+
+        <section class="card span-12">
+          <div class="actions">
+            <button type="reset" class="btn ghost">Limpiar</button>
+            <button type="submit" class="btn accent">Guardar orden</button>
+          </div>
+        </section>
+      </form>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container">
+        <div class="grid">
+          <div>
+            <a class="brand" href="index.html" style="display:inline-flex; gap:10px; align-items:center; text-decoration:none;">
+              <img class="footer-logo" src="img/logo.png" alt="andamios.com" />
+            </a>
+            <div class="muted" style="margin-top:8px;">Renta y venta de andamios · Control y trazabilidad por pieza</div>
+          </div>
+        </div>
+        <div class="foot-bottom">
+          <div>© 2026 andamios.com</div>
+          <div><a href="privacidad.html">Aviso de Privacidad</a></div>
+          <div class="muted">Powered by <a href="https://unknownshoppers.com" target="_blank" rel="noopener">The Unknown Shopper</a></div>
+        </div>
+      </div>
+    </footer>
+    <script src="script.js"></script>
+  </body>
+  </html>
+
