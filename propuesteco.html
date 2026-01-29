@@ -30,11 +30,10 @@
   </head>
   <body>
     <header class="hero">
-      <div class="container hero-inner">
-        <a class="brand" href="index.html">
-          <img class="brand-logo" src="img/logo.png" alt="andamios.com" />
+      <div class="container hero-inner" style="justify-content:center; text-align:center;">
+        <a class="brand" href="index.html" style="flex-direction:column; gap:12px; align-items:center;">
+          <img class="brand-logo" src="img/logo.png" alt="andamios.com" style="height:120px;" />
         </a>
-       
       </div>
     </header>
 
@@ -65,13 +64,14 @@
         <div class="card span-12">
           <h2>Alcance y funcionalidades</h2>
           <div class="grid" style="gap:12px;">
+            <div class="card span-4"><strong>Dashboard</strong><div class="muted">Equipos en renta, clientes, ingresos y egresos.</div></div>
+
             <div class="card span-4"><strong>Órdenes con partidas</strong><div class="muted">Piezas y conjuntos con validación de existencia.</div></div>
             <div class="card span-4"><strong>Cálculo por días</strong><div class="muted">Días según Inicio/Fin; importe por partida.</div></div>
             <div class="card span-4"><strong>Transporte</strong><div class="muted">Estimador automático editable en MXN.</div></div>
-            <div class="card span-4"><strong>Depósito</strong><div class="muted">Validación de mínimo 50% del total.</div></div>
+            <div class="card span-4"><strong>Depósito</strong><div class="muted">Validación de mínimo 50% del total o monto tabulado.</div></div>
             <div class="card span-4"><strong>Mapa y dirección</strong><div class="muted">Leaflet + geocodificación lat/lon.</div></div>
             <div class="card span-4"><strong>Lista de órdenes</strong><div class="muted">Ver, descargar, eliminar y exportar todo.</div></div>
-            <div class="card span-4"><strong>Dashboard</strong><div class="muted">Equipos en renta, clientes, ingresos y egresos.</div></div>
             <div class="card span-4"><strong>Persistencia local</strong><div class="muted">Opera 100% en el navegador (demo/producción inicial).</div></div>
             <div class="card span-4"><strong>Mantenible</strong><div class="muted">CSS y JS centralizados para agilidad.</div></div>
             <div class="card span-4"><strong>Despliegue seguro</strong><div class="muted">GitHub Pages con HTTPS.</div></div>
@@ -81,120 +81,67 @@
         <div class="card span-12">
           <h2>Entregables</h2>
           <ul>
-            <li>Código fuente del MVP, documentación y guía de uso.</li>
+            <li>Código fuente del MVP(Minimum Viable Product), documentación y guía de uso.</li>
             <li>Sitio productivo en GitHub Pages.</li>
             <li>Capacitación breve (1 sesión remota) para operación.</li>
           </ul>
         </div>
 
-        <div class="card span-7">
+        <div class="card span-12">
           <h2>Inversión económica</h2>
-          <table>
-            <thead>
-              <tr>
-                <th>Concepto</th>
-                <th>Descripción</th>
-                <th style="width: 160px;">Monto (MXN)</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>Realización del sistema <br>(pago único)</td>
-                <td class="muted">Diseño y desarrollo del MVP: formularios, lógica de cálculo, mapas, validaciones, dashboard y despliegue.</td>
-                <td>$ 24,000.00</td>
-              </tr>
-              <tr>
-                <td>Implementación en infraestructura del cliente (opcional)</td>
-                <td class="muted">Instalación en su propio dominio/servidor (o infraestructura elegida), configuración, carga inicial y ajustes finos.</td>
-                <td>$ 12,000.00</td>
-              </tr>
-              <tr>
-                <td>Licencia de uso <br>(mensual, obligatoria)</td>
-                <td class="muted">Derecho de uso, actualizaciones menores y mantenimiento correctivo. Operación estándar en GitHub Pages/Firestore sin necesidad de servidor propio.</td>
-                <td>$ 2,000.00 / mes</td>
-              </tr>
-            </tbody>
-            <tfoot>
-              <tr>
-                <td colspan="2" style="text-align:right;">Subtotal promoción — realización + 6 meses de licencia sin costo</td>
-                <td>$ 24,000.00</td>
-              </tr>
-              <tr>
-                <td colspan="2" style="text-align:right;" class="muted">Desglose: Realización $ 24,000.00 + Licencia 6 meses $ 0.00</td>
-                <td class="muted">$ 24,000.00</td>
-              </tr>
-              <tr>
-                <td colspan="2" style="text-align:right;">IVA 16% (Promoción)</td>
-                <td>$ 3,840.00</td>
-              </tr>
-              <tr>
-                <td colspan="2" style="text-align:right;">Total promoción</td>
-                <td>$ 27,840.00</td>
-              </tr>
-              <tr>
-                <td colspan="3"><hr style="border:0; border-top:1px solid var(--line);" /></td>
-              </tr>
-              <tr>
-                <td colspan="2" style="text-align:right;">Subtotal 1 (realización + 1 año de licencia)</td>
-                <td>$ 48,000.00</td>
-              </tr>
-              <tr>
-                <td colspan="2" style="text-align:right;" class="muted">Realización</td>
-                <td class="muted">$ 24,000.00</td>
-              </tr>
-              <tr>
-                <td colspan="2" style="text-align:right;" class="muted">Licencia 1 año</td>
-                <td class="muted">$ 24,000.00</td>
-              </tr>
-              
-              <tr>
-                <td colspan="2" style="text-align:right;">IVA 16% (Subtotal 1)</td>
-                <td>$ 7,680.00</td>
-              </tr>
-              <tr>
-                <td colspan="2" style="text-align:right;">Total Subtotal 1</td>
-                <td>$ 55,680.00</td>
-              </tr>
-              </tr>
-              <tr>
-                <td colspan="2" style="text-align:right;">Anticipo 50% de la realización</td>
-                <td>$ 12,000.00</td>
-              </tr>
-              <tr>
-                <td colspan="3"><hr style="border:0; border-top:1px solid var(--line);" /></td>
-              </tr>
-              <tr>
-                <td colspan="2" style="text-align:right;">Subtotal 2 (realización + implementación + 1 año de licencia)</td>
-                <td>$ 60,000.00</td>
-              </tr>
-              <tr>
-                <td colspan="2" style="text-align:right;" class="muted">Realización</td>
-                <td class="muted">$ 24,000.00</td>
-              </tr>
-              <tr>
-                <td colspan="2" style="text-align:right;" class="muted">Implementación</td>
-                <td class="muted">$ 12,000.00</td>
-              </tr>
-              <tr>
-                <td colspan="2" style="text-align:right;" class="muted">Licencia 1 año</td>
-                <td class="muted">$ 24,000.00</td>
-              </tr>
-              
-              <tr>
-                <td colspan="2" style="text-align:right;">IVA 16% (Subtotal 2)</td>
-                <td>$ 9,600.00</td>
-              </tr>
-              <tr>
-                <td colspan="2" style="text-align:right;">Total Subtotal 2</td>
-                <td>$ 69,600.00</td>
-              </tr>
-              <tr>
-                <td colspan="2" style="text-align:right;">Anticipo 50% de la realización</td>
-                <td>$ 12,000.00</td>
-              </tr>
-            </tfoot>
-          </table>
-          <p class="muted">La **licencia mensual es obligatoria** y se factura de manera recurrente. <strong>Costo anual de licencia: $ 24,000.00 MXN</strong>. Puede pagarse **mes a mes** o en un **solo pago anual**. En la **promoción**, a partir del mes 7 la licencia se factura a **$ 2,000.00 MXN/mes** o **$ 24,000.00 MXN/año**. La **implementación es opcional**: el sistema puede operar en GitHub Pages/Firestore de forma inmediata sin servidor propio.</p>
+          <div class="muted" style="margin-bottom:10px;">
+            Base: Realización $ 24,000.00 · Implementación (opcional) $ 12,000.00 · Licencia (obligatoria) $ 2,000.00/mes (o $ 24,000.00/año)
+          </div>
+
+          <div class="grid" style="gap:12px;">
+            <div class="card span-4">
+              <h3 style="margin:0 0 6px;">Subtotal promoción</h3>
+              <div class="muted" style="margin-bottom:10px;">Realización + 6 meses de licencia sin costo</div>
+              <table>
+                <tbody>
+                  <tr><td class="muted">Realización</td><td style="text-align:right;"><strong>$ 24,000.00</strong></td></tr>
+                  <tr><td class="muted">Licencia 6 meses</td><td style="text-align:right;">$ 0.00</td></tr>
+                  <tr><td class="muted">Subtotal</td><td style="text-align:right;">$ 24,000.00</td></tr>
+                  <tr><td class="muted">IVA 16%</td><td style="text-align:right;">$ 3,840.00</td></tr>
+                  <tr><td><strong>Total</strong></td><td style="text-align:right;"><strong>$ 27,840.00</strong></td></tr>
+                  <tr><td class="muted">Anticipo 50% realización</td><td style="text-align:right;">$ 12,000.00</td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="card span-4">
+              <h3 style="margin:0 0 6px;">Subtotal 1</h3>
+              <div class="muted" style="margin-bottom:10px;">Realización + 1 año de licencia</div>
+              <table>
+                <tbody>
+                  <tr><td class="muted">Realización</td><td style="text-align:right;"><strong>$ 24,000.00</strong></td></tr>
+                  <tr><td class="muted">Licencia 1 año</td><td style="text-align:right;">$ 24,000.00</td></tr>
+                  <tr><td class="muted">Subtotal</td><td style="text-align:right;">$ 48,000.00</td></tr>
+                  <tr><td class="muted">IVA 16%</td><td style="text-align:right;">$ 7,680.00</td></tr>
+                  <tr><td><strong>Total</strong></td><td style="text-align:right;"><strong>$ 55,680.00</strong></td></tr>
+                  <tr><td class="muted">Anticipo 50% realización</td><td style="text-align:right;">$ 12,000.00</td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="card span-4">
+              <h3 style="margin:0 0 6px;">Subtotal 2</h3>
+              <div class="muted" style="margin-bottom:10px;">Realización + implementación + 1 año de licencia</div>
+              <table>
+                <tbody>
+                  <tr><td class="muted">Realización</td><td style="text-align:right;"><strong>$ 24,000.00</strong></td></tr>
+                  <tr><td class="muted">Implementación</td><td style="text-align:right;">$ 12,000.00</td></tr>
+                  <tr><td class="muted">Licencia 1 año</td><td style="text-align:right;">$ 24,000.00</td></tr>
+                  <tr><td class="muted">Subtotal</td><td style="text-align:right;">$ 60,000.00</td></tr>
+                  <tr><td class="muted">IVA 16%</td><td style="text-align:right;">$ 9,600.00</td></tr>
+                  <tr><td><strong>Total</strong></td><td style="text-align:right;"><strong>$ 69,600.00</strong></td></tr>
+                  <tr><td class="muted">Anticipo 50% realización</td><td style="text-align:right;">$ 12,000.00</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <p class="muted" style="margin-top:10px;">La **licencia mensual es obligatoria** y se factura de manera recurrente. <strong>Costo anual de licencia: $ 24,000.00 MXN</strong>. Puede pagarse **mes a mes** o en un **solo pago anual**. En la **promoción**, a partir del mes 7 la licencia se factura a **$ 2,000.00 MXN/mes** o **$ 24,000.00 MXN/año**. La **implementación es opcional**: el sistema puede operar en GitHub Pages/Firestore de forma inmediata sin servidor propio.</p>
         </div>
         <div class="card span-5">
           <h2>Alcance futuro (en desarrollo)</h2>
@@ -210,8 +157,9 @@
           <h2>Tiempos y condiciones</h2>
           <ul>
             <li>Disponibilidad inmediata del MVP (ya desplegado para demo).</li>
-            <li>Tiempo de entrega del proyecto: <strong>1 mes</strong>.</li>
-            <li>Implementación y capacitación (si aplica): 2–3 días hábiles posteriores a la autorización.</li>
+            <li>Tiempo de entrega del proyecto (incluye completar dashboard): <strong>1 mes</strong> (4 semanas).</li>
+            <li class="muted">Incluye: vista de <strong>equipos en mantenimiento</strong>, vista de <strong>clientes</strong> y vista <strong>administrativa/flujo</strong> (ingresos/egresos por periodo).</li>
+            <li>Implementación en infraestructura del cliente (opcional): 3–5 días hábiles posteriores a la autorización y disponibilidad de dominio/servidor.</li>
             <li>Vigencia de la propuesta: 30 días.</li>
             <li>Forma de pago: 50% anticipo, 50% contra entrega (para realización e implementación). Licencia: mensual o pago anual.</li>
           </ul>
