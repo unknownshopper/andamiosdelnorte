@@ -52,9 +52,26 @@ label { font-weight: 600; font-size: 13px; color: var(--muted); }
 input, select, textarea { width: 100%; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; font-size: 15px; }
 textarea { min-height: 90px; resize: vertical; }
 
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: rgba(14,165,164,0.55);
+  box-shadow: 0 0 0 3px rgba(14,165,164,0.14);
+}
+
 /* Layout helpers */
 .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
 .row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+
+.partidas-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.partidas-controls > div:last-child {
+  display: flex;
+  justify-content: flex-end;
+}
 
 /* Headings inside cards */
 .card h2 { font-size: 18px; margin: 0 0 12px; }
@@ -97,6 +114,64 @@ tfoot td { font-weight: 700; }
 /* Conjuntos alternados: grupo A con tono y grupo B blanco */
 tbody tr.row-conjunto.group-a td { background: #f0fdfa; }
 tbody tr.row-conjunto.group-b td { background: #ffffff; }
+
+/* Selector de piezas (grid de iconos grandes) */
+.pieza-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 8px;
+}
+.pieza-tile {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fff;
+  padding: 12px 10px;
+  text-align: center;
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.pieza-tile .pieza-icon {
+  width: 46px;
+  height: 46px;
+  border-radius: 12px;
+  margin: 0 auto 8px;
+  background: #f1f5f9;
+  border: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  color: #0f172a;
+}
+.pieza-tile .pieza-name {
+  font-weight: 800;
+  font-size: 13px;
+  line-height: 1.15;
+}
+.pieza-tile .pieza-meta {
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.pieza-tile.is-active {
+  border-color: rgba(14,165,164,0.75);
+  box-shadow: 0 0 0 3px rgba(14,165,164,0.14);
+}
+.pieza-tile.is-active .pieza-icon {
+  background: #ecfeff;
+  border-color: #99f6e4;
+  color: var(--accent);
+}
+
+.pieza-tile.is-disabled {
+  opacity: 0.45;
+}
+
+.pieza-tile.is-disabled {
+  pointer-events: none;
+}
 
 /* Utilities */
 .grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 16px; }

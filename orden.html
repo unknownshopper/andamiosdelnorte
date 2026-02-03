@@ -17,6 +17,34 @@
       integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
       crossorigin=""
     ></script>
+    <script>
+      (function(){
+        try {
+          if (!/([?&])debug=1(\b|&|$)/.test(String(location.search))) return;
+          var box = document.createElement('pre');
+          box.id = 'debugOverlay';
+          box.style.cssText = 'position:fixed;left:8px;right:8px;bottom:8px;max-height:45vh;overflow:auto;background:rgba(0,0,0,.85);color:#fff;padding:10px;border-radius:8px;z-index:999999;font:12px/1.35 ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;white-space:pre-wrap;word-break:break-word;';
+          box.textContent = 'DEBUG activo (debug=1)\n';
+          document.addEventListener('DOMContentLoaded', function(){
+            document.body.appendChild(box);
+          });
+          function log(msg){
+            try { box.textContent += msg + '\n'; } catch(e) {}
+          }
+          window.addEventListener('error', function(e){
+            var m = (e && e.message) ? e.message : 'Error';
+            var f = (e && e.filename) ? e.filename : '';
+            var l = (e && e.lineno) ? e.lineno : '';
+            log('[JS error] ' + m + (f ? ('\n' + f + ':' + l) : ''));
+          });
+          window.addEventListener('unhandledrejection', function(e){
+            var r = (e && e.reason) ? e.reason : 'Unhandled rejection';
+            try { r = (typeof r === 'string') ? r : JSON.stringify(r); } catch(err) {}
+            log('[Promise] ' + r);
+          });
+        } catch (e) {}
+      })();
+    </script>
     <meta name="description" content="Renta y control por pieza. Genera órdenes, calcula por días, estima transporte con mapa, valida stock y visualiza métricas en tiempo real." />
     <link rel="canonical" href="https://unknownshopper.github.io/andamiosdelnorte/orden.html" />
     <!-- Open Graph / WhatsApp preview -->
@@ -80,7 +108,7 @@
             </div>
             <div>
               <label for="contactoTelefono">Contacto - Teléfono</label>
-              <input id="contactoTelefono" name="contactoTelefono" placeholder="Ej. +52 55 1234 5678" />
+              <input id="contactoTelefono" name="contactoTelefono" type="tel" inputmode="tel" autocomplete="tel" placeholder="Ej. +52 55 1234 5678" />
             </div>
           </div>
           <div class="row">
@@ -128,7 +156,7 @@
 
         <section class="card span-12">
           <h2>Partidas (piezas / conjuntos)</h2>
-          <div class="row" style="align-items:end;">
+          <div class="row partidas-controls" style="align-items:end;">
             <div>
               <label for="tipoPartida">Tipo</label>
               <select id="tipoPartida">
@@ -138,9 +166,12 @@
             </div>
             <div>
               <label for="itemSelect">Elemento</label>
-              <select id="itemSelect">
-                <option value="">Seleccionar…</option>
-              </select>
+              <div id="itemSelectWrap">
+                <select id="itemSelect">
+                  <option value="">Seleccionar…</option>
+                </select>
+              </div>
+              <div id="piezaGrid" class="pieza-grid" style="display:none;"></div>
               <div class="existencia-hint" id="existenciaHint">Existencia: —</div>
             </div>
             <div>

@@ -7,6 +7,26 @@ function setYear() {
 document.addEventListener('DOMContentLoaded', () => {
   setYear();
 
+  function storageAvailable(){
+    try {
+      const x = '__storage_test__';
+      localStorage.setItem(x, '1');
+      localStorage.removeItem(x);
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function trySetLocal(key, value){
+    try {
+      localStorage.setItem(key, value);
+      return { ok: true };
+    } catch (e) {
+      return { ok: false, error: e };
+    }
+  }
+
   // =====================
   // index.html (login + dashboard)
   // =====================
@@ -35,7 +55,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const moneyFmt = (n) => new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(n||0);
     const readOrders = () => {
       const keys = Object.keys(localStorage).filter(k => k.startsWith('orden_'));
-      return keys.map(k => { try { return JSON.parse(localStorage.getItem(k)||'null'); } catch { return null; } }).filter(Boolean);
+      return keys.map(k => { try { return JSON.parse(localStorage.getItem(k)||'null'); } catch (e) { return null; } }).filter(Boolean);
     };
     const isActive = (o) => {
       if (!o) return false;
@@ -56,7 +76,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const clienteSet = new Set(active.map(o => o.cliente).filter(Boolean));
 
     // Ingresos: suma de totales de órdenes activas
-    const ingresos = active.reduce((acc,o)=> acc + parseCur(o?.totales?.total || o?.totales?.subtotal || 0), 0);
+    const ingresos = active.reduce((acc,o)=> acc + parseCur((o && o.totales && (o.totales.total || o.totales.subtotal)) || 0), 0);
 
     // Egresos: configurable por localStorage (gastos_operativos); si no existe, 0
     const egresos = parseCur(localStorage.getItem('gastos_operativos') || 0);
@@ -84,12 +104,12 @@ document.addEventListener('DOMContentLoaded', () => {
     function rl_money(n){
       try { return new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(Number(n)||0); } catch(e){ return '$ 0.00'; }
     }
-    function rl_safeParse(s){ try { return JSON.parse(s); } catch { return null; } }
+    function rl_safeParse(s){ try { return JSON.parse(s); } catch (e) { return null; } }
     function rl_readAll(){
       const keys = Object.keys(localStorage).filter(k => k.startsWith('orden_')).sort();
       return keys.map(k => ({ key: k, data: rl_safeParse(localStorage.getItem(k)) })).filter(x => !!x.data);
     }
-    function rl_state(o){ return o?.fin ? 'Cerrada' : 'Abierta'; }
+    function rl_state(o){ return (o && o.fin) ? 'Cerrada' : 'Abierta'; }
     function rl_escape(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c])); }
 
     function rl_render(){
@@ -103,13 +123,13 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       rows.forEach(({key, data}) => {
         const tr = document.createElement('tr');
-        const total = data?.totales?.total || data?.totales?.subtotal || '';
+        const total = (data && data.totales && (data.totales.total || data.totales.subtotal)) || '';
         tr.innerHTML = `
-          <td>${data?.orderId || '—'}</td>
-          <td>${rl_escape(data?.cliente || '—')}</td>
-          <td>${rl_escape(data?.obra || '—')}</td>
-          <td>${data?.inicio || '—'}</td>
-          <td>${data?.fin || '—'}</td>
+          <td>${(data && data.orderId) || '—'}</td>
+          <td>${rl_escape((data && data.cliente) || '—')}</td>
+          <td>${rl_escape((data && data.obra) || '—')}</td>
+          <td>${(data && data.inicio) || '—'}</td>
+          <td>${(data && data.fin) || '—'}</td>
           <td>${rl_escape(total)}</td>
           <td>${rl_state(data)}</td>
           <td style="white-space:nowrap;">
@@ -133,19 +153,137 @@ document.addEventListener('DOMContentLoaded', () => {
       if (action === 'view'){
         const w = window.open('about:blank', '_blank');
         if (w) {
-          w.document.write('<pre style="white-space:pre-wrap; word-break:break-word; padding:16px;">'+rl_escape(JSON.stringify(data, null, 2))+'</pre>');
+          const baseHref = String(location.href).replace(/[^/]*$/, '');
+          const partidas = Array.isArray(data && data.partidas) ? data.partidas : [];
+          const partidasRows = partidas.map((p) => {
+            const sets = (p && (p.sets !== undefined && p.sets !== null)) ? p.sets : '';
+            const unidades = (p && (p.unidades !== undefined && p.unidades !== null)) ? p.unidades : '';
+            const dias = (p && (p.dias !== undefined && p.dias !== null)) ? p.dias : '';
+            const tarifa = (p && (p.tarifa !== undefined && p.tarifa !== null)) ? p.tarifa : '';
+            const cantidad = (p && (p.cantidad !== undefined && p.cantidad !== null)) ? p.cantidad : '';
+            const desc = rl_escape((p && p.descripcion) ? p.descripcion : '—');
+            const tipo = rl_escape((p && p.tipo) ? p.tipo : '—');
+            return (
+              '<tr>'+
+                '<td>'+rl_escape(String(sets))+'</td>'+
+                '<td>'+tipo+'</td>'+
+                '<td>'+desc+'</td>'+
+                '<td>'+rl_escape(String(unidades))+'</td>'+
+                '<td>'+rl_escape(String(dias))+'</td>'+
+                '<td>'+rl_escape(String(tarifa))+'</td>'+
+                '<td>'+rl_escape(String(cantidad))+'</td>'+
+              '</tr>'
+            );
+          }).join('');
+
+          const orderId = rl_escape((data && data.orderId) ? data.orderId : '—');
+          const cliente = rl_escape((data && data.cliente) ? data.cliente : '—');
+          const obra = rl_escape((data && data.obra) ? data.obra : '—');
+          const inicio = rl_escape((data && data.inicio) ? data.inicio : '—');
+          const fin = rl_escape((data && data.fin) ? data.fin : '—');
+          const ubicacion = rl_escape((data && data.ubicacion) ? data.ubicacion : '—');
+          const deposito = rl_escape(String((data && data.deposito !== undefined && data.deposito !== null) ? data.deposito : '—'));
+          const tipoPagoDeposito = rl_escape((data && data.tipoPagoDeposito) ? data.tipoPagoDeposito : '—');
+          const subtotal = rl_escape((data && data.totales && data.totales.subtotal) ? data.totales.subtotal : '—');
+          const transporte = rl_escape((data && data.totales && data.totales.transporte) ? data.totales.transporte : '—');
+          const iva = rl_escape((data && data.totales && data.totales.iva) ? data.totales.iva : '—');
+          const total = rl_escape((data && data.totales && data.totales.total) ? data.totales.total : '—');
+
+          w.document.write(
+            '<!doctype html>'+
+            '<html lang="es">'+
+            '<head>'+
+              '<meta charset="utf-8" />'+
+              '<meta name="viewport" content="width=device-width, initial-scale=1" />'+
+              '<title>Orden '+orderId+' | andamios.com</title>'+
+              '<base href="'+rl_escape(baseHref)+'" />'+
+              '<link rel="icon" href="img/icon.png" />'+
+              '<link rel="stylesheet" href="style.css" />'+
+            '</head>'+
+            '<body>'+
+              '<header class="hero">'+
+                '<div class="container hero-inner">'+
+                  '<a class="brand" href="rentlist.html">'+
+                    '<img class="brand-logo" src="img/logo.png" alt="andamios.com" />'+
+                    '<span class="brand-name">andamios.com</span>'+
+                  '</a>'+
+                  '<nav>'+
+                    '<button class="btn" type="button" onclick="window.close()">Cerrar</button>'+
+                  '</nav>'+
+                '</div>'+
+              '</header>'+
+
+              '<main class="container">'+
+                '<h1>Orden '+orderId+'</h1>'+
+                '<p class="muted">Vista de detalle</p>'+
+
+                '<section class="grid" style="margin-top:12px;">'+
+                  '<div class="card span-6">'+
+                    '<h2>Cliente y obra</h2>'+
+                    '<div class="muted"><strong>Cliente:</strong> '+cliente+'</div>'+
+                    '<div class="muted"><strong>Obra:</strong> '+obra+'</div>'+
+                    '<div class="muted"><strong>Inicio:</strong> '+inicio+'</div>'+
+                    '<div class="muted"><strong>Fin:</strong> '+fin+'</div>'+
+                  '</div>'+
+                  '<div class="card span-6">'+
+                    '<h2>Ubicación y depósito</h2>'+
+                    '<div class="muted"><strong>Ubicación:</strong> '+ubicacion+'</div>'+
+                    '<div class="muted"><strong>Depósito:</strong> '+deposito+'</div>'+
+                    '<div class="muted"><strong>Tipo de pago:</strong> '+tipoPagoDeposito+'</div>'+
+                  '</div>'+
+
+                  '<div class="card span-12">'+
+                    '<h2>Partidas</h2>'+
+                    '<div style="overflow:auto;">'+
+                      '<table>'+
+                        '<thead>'+
+                          '<tr>'+
+                            '<th>Cantidad</th>'+
+                            '<th>Tipo</th>'+
+                            '<th>Descripción</th>'+
+                            '<th>Unidades</th>'+
+                            '<th>Días</th>'+
+                            '<th>Tarifa</th>'+
+                            '<th>Total piezas</th>'+
+                          '</tr>'+
+                        '</thead>'+
+                        '<tbody>'+
+                          (partidasRows || '<tr><td colspan="7" class="muted">Sin partidas</td></tr>')+
+                        '</tbody>'+
+                      '</table>'+
+                    '</div>'+
+                  '</div>'+
+
+                  '<div class="card span-12">'+
+                    '<h2>Totales</h2>'+
+                    '<div style="overflow:auto;">'+
+                      '<table>'+
+                        '<tbody>'+
+                          '<tr><td class="muted">Subtotal</td><td style="text-align:right;"><strong>'+subtotal+'</strong></td></tr>'+
+                          '<tr><td class="muted">Transporte</td><td style="text-align:right;">'+transporte+'</td></tr>'+
+                          '<tr><td class="muted">IVA</td><td style="text-align:right;">'+iva+'</td></tr>'+
+                          '<tr><td><strong>Total</strong></td><td style="text-align:right;"><strong>'+total+'</strong></td></tr>'+
+                        '</tbody>'+
+                      '</table>'+
+                    '</div>'+
+                  '</div>'+
+                '</section>'+
+              '</main>'+
+            '</body>'+
+            '</html>'
+          );
           w.document.close();
         }
       } else if (action === 'download'){
         const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
-        a.href = url; a.download = (data?.orderId || key)+'.json';
+        a.href = url; a.download = ((data && data.orderId) || key)+'.json';
         document.body.appendChild(a); a.click(); a.remove();
         URL.revokeObjectURL(url);
       } else if (action === 'delete'){
         if (confirm('¿Eliminar esta orden?')){
-          try { localStorage.removeItem(key); } catch {}
+          try { localStorage.removeItem(key); } catch (e) {}
           rl_render();
         }
       }
@@ -155,7 +293,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const exportAllBtn = document.getElementById('exportAll');
     if (exportAllBtn) exportAllBtn.addEventListener('click', () => {
       const rows = rl_readAll();
-      const payload = rows.map(r => ({ key: r.key, ...r.data }));
+      const payload = rows.map(r => Object.assign({ key: r.key }, (r && r.data) ? r.data : {}));
       const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -189,7 +327,7 @@ document.addEventListener('DOMContentLoaded', () => {
         { codigo: 'AB-90', pieza: 'Abrazadera', medida: 'Fija 90°', unidad: 'pz', peso: 1.1, tarifa: 6, stock: 400, categoria: 'abrazaderas', img: '' },
         { codigo: 'TB-300', pieza: 'Tubo', medida: '3.0 m', unidad: 'pz', peso: 7.5, tarifa: 18, stock: 140, categoria: 'tubos', img: '' }
       ];
-      try { localStorage.setItem('inv_catalog', JSON.stringify(seed)); } catch {}
+      try { localStorage.setItem('inv_catalog', JSON.stringify(seed)); } catch (e) {}
       return seed;
     }
 
@@ -200,7 +338,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const parsed = JSON.parse(raw);
         if (!Array.isArray(parsed)) return seedCatalog();
         return parsed;
-      } catch { return seedCatalog(); }
+      } catch (e) { return seedCatalog(); }
     }
 
     function render(rows){
@@ -214,9 +352,9 @@ document.addEventListener('DOMContentLoaded', () => {
           <td>${item.pieza||''}</td>
           <td class="hide-sm">${item.medida||''}</td>
           <td>${item.unidad||''}</td>
-          <td class="hide-sm">${(item.peso??'')}${item.peso? ' kg':''}</td>
+          <td class="hide-sm">${((item.peso !== undefined && item.peso !== null) ? item.peso : '')}${item.peso? ' kg':''}</td>
           <td>${moneyInv(item.tarifa)}</td>
-          <td>${item.stock??0}</td>
+          <td>${((item.stock !== undefined && item.stock !== null) ? item.stock : 0)}</td>
         `;
         invBody.appendChild(tr);
       });
@@ -225,8 +363,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const catalog = loadCatalog();
 
     function applyFilters(){
-      const q = (invSearch?.value||'').toLowerCase();
-      const cat = invCategoria?.value || '';
+      const q = ((invSearch && invSearch.value) ? invSearch.value : '').toLowerCase();
+      const cat = (invCategoria && invCategoria.value) ? invCategoria.value : '';
       const filtered = catalog.filter(it => {
         const matchText = !q || `${it.codigo} ${it.pieza} ${it.medida}`.toLowerCase().includes(q);
         const matchCat = !cat || it.categoria === cat;
@@ -255,7 +393,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     loginForm.addEventListener('submit', (e) => {
       e.preventDefault();
-      const email = (document.getElementById('email') || {}).value?.trim();
+      const emailEl = document.getElementById('email');
+      const emailRaw = emailEl ? emailEl.value : '';
+      const email = emailRaw ? String(emailRaw).trim() : '';
       const pass = (document.getElementById('password') || {}).value;
       if (!email || !pass) { alert('Completa correo y contraseña'); return; }
       localStorage.setItem('sessionEmail', email);
@@ -273,6 +413,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const agregarItemBtn = document.getElementById('agregarItem');
     const tipoPartida = document.getElementById('tipoPartida');
     const itemSelect = document.getElementById('itemSelect');
+    const itemSelectWrap = document.getElementById('itemSelectWrap');
+    const piezaGrid = document.getElementById('piezaGrid');
     const existenciaHint = document.getElementById('existenciaHint');
     const conjuntoQty = document.getElementById('conjuntoQty');
     const subtotalEl = document.getElementById('subtotal');
@@ -317,25 +459,29 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!partidasBody) return;
       let subtotal = 0;
       partidasBody.querySelectorAll('tr').forEach(tr => {
-        let sets = parseFloat(tr.querySelector('.sets')?.value || '');
+        const setsEl = tr.querySelector('.sets');
+        let sets = parseFloat(setsEl ? setsEl.value : '');
         if (!Number.isFinite(sets) || sets === 0) {
           const gid = tr.dataset.groupId;
           if (gid) {
             const headerSets = partidasBody.querySelector(`tr[data-group-id="${gid}"] .sets`);
-            sets = parseFloat(headerSets?.value || '0');
+            sets = parseFloat(headerSets ? headerSets.value : '0');
           } else {
             sets = 0;
           }
         }
-        const units = parseFloat(tr.querySelector('.units')?.value) || 0;
-        const rate = parseMoney(tr.querySelector('.rate')?.value || '0') || 0;
-        const days = parseFloat(tr.querySelector('.days')?.value) || 1;
+        const unitsEl = tr.querySelector('.units');
+        const rateEl = tr.querySelector('.rate');
+        const daysEl = tr.querySelector('.days');
+        const units = parseFloat(unitsEl ? unitsEl.value : '') || 0;
+        const rate = parseMoney(rateEl ? rateEl.value : '0') || 0;
+        const days = parseFloat(daysEl ? daysEl.value : '') || 1;
         const imp = sets * units * rate * days;
         const impCell = tr.querySelector('.importe');
         if (impCell) impCell.textContent = money(imp);
         subtotal += imp;
       });
-      const transporte = parseMoney(transporteInput?.value || '0') || 0;
+      const transporte = parseMoney((transporteInput && transporteInput.value) ? transporteInput.value : '0') || 0;
       const base = subtotal + transporte;
       const iva = base * 0.16;
       const total = base + iva;
@@ -348,6 +494,46 @@ document.addEventListener('DOMContentLoaded', () => {
         const cur = parseMoney(depositoEl.value || '0');
         if (cur < min) depositoEl.value = String(min.toFixed(2));
       }
+
+      // Refrescar inventario disponible en UI (grid/hints)
+      try { updateExistenciaHint(); } catch (e) {}
+    }
+
+    function getReservedByIndex(){
+      const reserved = {};
+      if (!partidasBody) return reserved;
+      const rows = partidasBody.querySelectorAll('tr');
+      Array.prototype.forEach.call(rows, (tr) => {
+        const idxRaw = tr && tr.dataset ? tr.dataset.itemIndex : null;
+        if (idxRaw === undefined || idxRaw === null || idxRaw === '') return;
+        const idx = parseInt(String(idxRaw), 10);
+        if (!isFinite(idx)) return;
+
+        // calcular cantidad en piezas: sets * units
+        const setsEl = tr.querySelector('.sets');
+        const unitsEl = tr.querySelector('.units');
+        let sets = parseFloat(setsEl ? setsEl.value : '0');
+        if (!isFinite(sets) || sets === 0) {
+          const gid = tr.dataset ? tr.dataset.groupId : '';
+          if (gid) {
+            const headerSets = partidasBody.querySelector(`tr[data-group-id="${gid}"] .sets`);
+            sets = parseFloat(headerSets ? headerSets.value : '0');
+          }
+        }
+        const units = parseFloat(unitsEl ? unitsEl.value : '0') || 0;
+        const qty = Math.max(0, (sets || 0) * (units || 0));
+        reserved[idx] = (reserved[idx] || 0) + qty;
+      });
+      return reserved;
+    }
+
+    function availableStockForIndex(idx){
+      const it = invCatalogOrden[idx];
+      const base = it && isFinite(it.stock) ? Number(it.stock) : 0;
+      const reserved = getReservedByIndex();
+      const used = reserved[idx] || 0;
+      const avail = base - used;
+      return avail < 0 ? 0 : avail;
     }
 
     function removeRow(btn){
@@ -360,8 +546,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (header) {
           const td1 = header.querySelector('td:nth-child(1)');
           const td2 = header.querySelector('td:nth-child(2)');
-          let rs1 = parseInt(td1?.getAttribute('rowspan')||'1', 10);
-          let rs2 = parseInt(td2?.getAttribute('rowspan')||'1', 10);
+          let rs1 = parseInt((td1 && td1.getAttribute('rowspan')) || '1', 10);
+          let rs2 = parseInt((td2 && td2.getAttribute('rowspan')) || '1', 10);
           if (siblings.length > 1) {
             if (tr === header) {
               // Move header cell to next sibling in group
@@ -385,6 +571,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       tr.remove();
       recalc();
+      try { updateExistenciaHint(); } catch (e) {}
     }
 
     function autoResize(el){
@@ -442,6 +629,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       if (!initial && descArea) autoResize(descArea);
       recalc();
+      updateExistenciaHint();
       return tr;
     }
 
@@ -455,7 +643,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     if (depositoEl) depositoEl.addEventListener('input', () => {
       // validar contra mínimo
-      const total = parseMoney(totalEl?.textContent || '0');
+      const total = parseMoney((totalEl && totalEl.textContent) ? totalEl.textContent : '0');
       const min = Math.max(0, total * 0.5);
       const cur = parseMoney(depositoEl.value || '0');
       if (cur < min) depositoEl.value = String(min.toFixed(2));
@@ -497,7 +685,7 @@ document.addEventListener('DOMContentLoaded', () => {
         { codigo: 'AB-90', pieza: 'Abrazadera', medida: 'Fija 90°', unidad: 'pz', peso: 1.1, tarifa: 6, stock: 400, categoria: 'abrazaderas', img: '' },
         { codigo: 'TB-300', pieza: 'Tubo', medida: '3.0 m', unidad: 'pz', peso: 7.5, tarifa: 18, stock: 140, categoria: 'tubos', img: '' }
       ];
-      try { localStorage.setItem('inv_catalog', JSON.stringify(seed)); } catch {}
+      try { localStorage.setItem('inv_catalog', JSON.stringify(seed)); } catch (e) {}
       return seed;
     }
     function loadCatalogOrden(){
@@ -507,7 +695,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const parsed = JSON.parse(raw);
         if (!Array.isArray(parsed)) return seedCatalogOrden();
         return parsed;
-      } catch { return seedCatalogOrden(); }
+      } catch (e) { return seedCatalogOrden(); }
     }
     const invCatalogOrden = loadCatalogOrden();
 
@@ -515,11 +703,76 @@ document.addEventListener('DOMContentLoaded', () => {
       return [it.pieza, it.medida].filter(Boolean).join(' ');
     }
 
+    function piezaIconText(it){
+      const p = (it && it.pieza) ? String(it.pieza) : '';
+      const m = p.replace(/\s+/g, ' ').trim();
+      if (!m) return 'PZ';
+      const parts = m.split(' ');
+      const a = parts[0] ? parts[0].slice(0,1) : '';
+      const b = parts[1] ? parts[1].slice(0,1) : '';
+      const t = (a + b).toUpperCase();
+      return t || m.slice(0,2).toUpperCase();
+    }
+
+    function setActivePiezaTile(){
+      if (!piezaGrid) return;
+      const val = itemSelect ? itemSelect.value : '';
+      const tiles = piezaGrid.querySelectorAll('[data-val]');
+      Array.prototype.forEach.call(tiles, (t) => {
+        const isActive = t.getAttribute('data-val') === String(val);
+        if (isActive) t.classList.add('is-active');
+        else t.classList.remove('is-active');
+      });
+    }
+
+    function updatePiezaGridCounts(){
+      if (!piezaGrid) return;
+      const tiles = piezaGrid.querySelectorAll('[data-val]');
+      Array.prototype.forEach.call(tiles, (t) => {
+        const idx = parseInt(String(t.getAttribute('data-val') || ''), 10);
+        const avail = isFinite(idx) ? availableStockForIndex(idx) : 0;
+        const meta = t.querySelector('.pieza-meta');
+        const code = t.getAttribute('data-code') || '';
+        if (meta) meta.textContent = code ? (code + ' · Disp: ' + String(avail)) : ('Disp: ' + String(avail));
+        if (avail <= 0) t.classList.add('is-disabled');
+        else t.classList.remove('is-disabled');
+      });
+    }
+
+    function renderPiezaGrid(){
+      if (!piezaGrid) return;
+      piezaGrid.innerHTML = '';
+      invCatalogOrden.forEach((it, idx) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'pieza-tile';
+        btn.setAttribute('data-val', String(idx));
+        const code = it && it.codigo ? String(it.codigo) : '';
+        btn.setAttribute('data-code', code);
+        const name = it ? labelItemInv(it) : '';
+        btn.innerHTML = `
+          <div class="pieza-icon">${piezaIconText(it)}</div>
+          <div class="pieza-name">${name || 'Pieza'}</div>
+          <div class="pieza-meta">${code}</div>
+        `;
+        btn.addEventListener('click', () => {
+          if (itemSelect) itemSelect.value = String(idx);
+          setActivePiezaTile();
+          updateExistenciaHint();
+        });
+        piezaGrid.appendChild(btn);
+      });
+      setActivePiezaTile();
+      updatePiezaGridCounts();
+    }
+
     function populateItemSelect(){
       if (!itemSelect || !tipoPartida) return;
       itemSelect.innerHTML = '<option value="">Seleccionar…</option>';
       const t = tipoPartida.value;
       if (t === 'conjunto') {
+        if (itemSelectWrap) itemSelectWrap.style.display = '';
+        if (piezaGrid) piezaGrid.style.display = 'none';
         Object.entries(CATALOG_BOM).forEach(([key, def]) => {
           const opt = document.createElement('option');
           opt.value = key;
@@ -529,12 +782,17 @@ document.addEventListener('DOMContentLoaded', () => {
         // Default: Conjunto -> Andamio básico 1.0
         itemSelect.value = 'andamio_basico_1';
       } else {
+        if (itemSelectWrap) itemSelectWrap.style.display = 'none';
+        if (piezaGrid) piezaGrid.style.display = '';
         invCatalogOrden.forEach((it, idx) => {
           const opt = document.createElement('option');
           opt.value = String(idx);
           opt.textContent = labelItemInv(it);
           itemSelect.appendChild(opt);
         });
+        // Default: primera pieza
+        if (invCatalogOrden.length) itemSelect.value = '0';
+        renderPiezaGrid();
       }
       updateExistenciaHint();
     }
@@ -550,27 +808,44 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       if (d.includes('marco 2.0')) {
         const m = invCatalogOrden.find(x => x.pieza.toLowerCase()==='marco' && (x.medida||'').toLowerCase().includes('2.0'));
-        return m?.stock || 0;
+        return (m && m.stock) ? m.stock : 0;
       }
       if (d.includes('marco 1.5')) {
         const m = invCatalogOrden.find(x => x.pieza.toLowerCase()==='marco' && (x.medida||'').toLowerCase().includes('1.5'));
-        return m?.stock || 0;
+        return (m && m.stock) ? m.stock : 0;
       }
       if (d.includes('cruceta')) {
         const m = invCatalogOrden.find(x => x.pieza.toLowerCase().includes('cruceta'));
-        return m?.stock || 0;
+        return (m && m.stock) ? m.stock : 0;
       }
       if (d.includes('base fija')) {
         const m = invCatalogOrden.find(x => x.pieza.toLowerCase().includes('base fija'));
-        return m?.stock || 0;
+        return (m && m.stock) ? m.stock : 0;
       }
       if (d.includes('abrazadera')) {
         const m = invCatalogOrden.find(x => x.pieza.toLowerCase().includes('abrazadera'));
-        return m?.stock || 0;
+        return (m && m.stock) ? m.stock : 0;
       }
       // fallback: buscar por substring en pieza/medida
       const f = invCatalogOrden.find(x => `${x.pieza} ${x.medida}`.toLowerCase().includes(d));
-      return f?.stock || 0;
+      return (f && f.stock) ? f.stock : 0;
+    }
+
+    function reservedForDescriptor(desc){
+      const it = findItemByDescriptor(desc);
+      if (!it) return 0;
+      const idx = invCatalogOrden.indexOf(it);
+      if (idx < 0) return 0;
+      const reserved = getReservedByIndex();
+      return reserved[idx] || 0;
+    }
+
+    function availableStockForDescriptor(desc){
+      const it = findItemByDescriptor(desc);
+      if (!it) return 0;
+      const idx = invCatalogOrden.indexOf(it);
+      if (idx < 0) return 0;
+      return availableStockForIndex(idx);
     }
 
     function findItemByDescriptor(desc){
@@ -607,7 +882,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!def) return null;
       let minSets = Infinity;
       def.piezas.forEach(p => {
-        const stock = stockForDescriptor(p.descripcion || '');
+        const stock = availableStockForDescriptor(p.descripcion || '');
         const req = p.cantidad || 1;
         const sets = Math.floor((stock||0) / req);
         if (sets < minSets) minSets = sets;
@@ -623,26 +898,27 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!val) { existenciaHint.textContent = 'Existencia: —'; return; }
       if (t === 'conjunto') {
         const sets = existenciaConjunto(val);
-        existenciaHint.textContent = `Existencia: ${sets ?? '—'} conjuntos`;
+        existenciaHint.textContent = `Existencia: ${((sets !== undefined && sets !== null) ? sets : '—')} conjuntos`;
         if (conjuntoQty && Number.isFinite(sets)) {
           conjuntoQty.max = String(sets);
           const cur = parseInt(conjuntoQty.value || '1', 10) || 1;
           if (cur > sets) conjuntoQty.value = String(sets);
         }
       } else {
-        const it = invCatalogOrden[parseInt(val, 10)];
-        const stock = it?.stock ?? '—';
-        existenciaHint.textContent = `Existencia: ${stock} piezas`;
-        if (conjuntoQty && Number.isFinite(stock)) {
-          conjuntoQty.max = String(stock);
+        const idx = parseInt(val, 10);
+        const avail = isFinite(idx) ? availableStockForIndex(idx) : 0;
+        existenciaHint.textContent = `Existencia: ${avail} piezas disponibles`;
+        if (conjuntoQty && isFinite(avail)) {
+          conjuntoQty.max = String(avail);
           const cur = parseInt(conjuntoQty.value || '1', 10) || 1;
-          if (cur > stock) conjuntoQty.value = String(stock);
+          if (cur > avail) conjuntoQty.value = String(avail);
         }
       }
+      updatePiezaGridCounts();
     }
 
     if (tipoPartida) tipoPartida.addEventListener('change', populateItemSelect);
-    if (itemSelect) itemSelect.addEventListener('change', updateExistenciaHint);
+    if (itemSelect) itemSelect.addEventListener('change', () => { updateExistenciaHint(); setActivePiezaTile(); });
     if (conjuntoQty) conjuntoQty.addEventListener('input', updateExistenciaHint);
     // Defaults on load: Conjunto + Andamio básico 1.0
     if (tipoPartida) tipoPartida.value = 'conjunto';
@@ -660,17 +936,19 @@ document.addEventListener('DOMContentLoaded', () => {
       const groupClass = (conjuntoGroupCount++ % 2 === 0) ? 'group-a' : 'group-b';
       def.piezas.forEach(p => {
         const item = findItemByDescriptor(p.descripcion || '');
+        const idx = item ? invCatalogOrden.indexOf(item) : -1;
         const tr = addRow({
           tipo: 'conjunto',
           badgeLabel: def.nombre,
           descripcion: `${p.descripcion} (de ${def.nombre})`,
           sets: (qty || 1),
           unidades: (p.cantidad || 1),
-          tarifa: item?.tarifa || 0,
+          tarifa: (item && item.tarifa) ? item.tarifa : 0,
           unidad: 'mes'
         });
         if (tr) {
           tr.dataset.groupId = gid;
+          if (idx >= 0) tr.dataset.itemIndex = String(idx);
           tr.classList.add(groupClass);
           created.push(tr);
         }
@@ -692,9 +970,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (agregarItemBtn) {
       agregarItemBtn.addEventListener('click', () => {
-        const t = tipoPartida?.value || 'conjunto';
-        const qty = parseInt(conjuntoQty?.value || '1', 10) || 1;
-        const sel = itemSelect?.value || '';
+        const t = (tipoPartida && tipoPartida.value) ? tipoPartida.value : 'conjunto';
+        const qty = parseInt((conjuntoQty && conjuntoQty.value) ? conjuntoQty.value : '1', 10) || 1;
+        const sel = (itemSelect && itemSelect.value) ? itemSelect.value : '';
         if (!sel) { alert('Selecciona un elemento'); return; }
         if (t === 'conjunto') {
           const setsDisp = existenciaConjunto(sel);
@@ -706,12 +984,13 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
           const it = invCatalogOrden[parseInt(sel, 10)];
           if (!it) return;
-          const stock = parseInt(it.stock || 0, 10) || 0;
-          if (qty > stock) {
-            alert(`No puedes agregar ${qty} piezas; solo hay ${stock} en existencia.`);
+          const idx = parseInt(sel, 10);
+          const available = isFinite(idx) ? availableStockForIndex(idx) : 0;
+          if (qty > available) {
+            alert(`No puedes agregar ${qty} piezas; solo hay ${available} disponibles.`);
             return;
           }
-          addRow({
+          const tr = addRow({
             tipo: 'pieza',
             descripcion: labelItemInv(it),
             sets: qty,
@@ -719,6 +998,7 @@ document.addEventListener('DOMContentLoaded', () => {
             tarifa: it.tarifa || 0,
             unidad: 'mes'
           });
+          if (tr) tr.dataset.itemIndex = String(parseInt(sel, 10));
         }
       });
     }
@@ -733,24 +1013,28 @@ document.addEventListener('DOMContentLoaded', () => {
       const R = 6371; // km
       const dLat = toRad(bLat - aLat);
       const dLon = toRad(bLon - aLon);
-      const s1 = Math.sin(dLat/2) ** 2 + Math.cos(toRad(aLat)) * Math.cos(toRad(bLat)) * Math.sin(dLon/2) ** 2;
+      const sLat = Math.sin(dLat/2);
+      const sLon = Math.sin(dLon/2);
+      const s1 = (sLat * sLat) + Math.cos(toRad(aLat)) * Math.cos(toRad(bLat)) * (sLon * sLon);
       const c = 2 * Math.atan2(Math.sqrt(s1), Math.sqrt(1 - s1));
       return R * c;
     }
 
     function countTotalItems(){
       let total = 0;
-      (partidasBody?.querySelectorAll('tr') || []).forEach(tr => {
+      ((partidasBody && partidasBody.querySelectorAll('tr')) ? partidasBody.querySelectorAll('tr') : []).forEach(tr => {
         // sets fallback al header del grupo, igual que en recalc
-        let sets = parseFloat(tr.querySelector('.sets')?.value || '');
+        const setsEl = tr.querySelector('.sets');
+        let sets = parseFloat(setsEl ? setsEl.value : '');
         if (!Number.isFinite(sets) || sets === 0) {
           const gid = tr.dataset.groupId;
           if (gid) {
             const headerSets = partidasBody.querySelector(`tr[data-group-id="${gid}"] .sets`);
-            sets = parseFloat(headerSets?.value || '0');
+            sets = parseFloat(headerSets ? headerSets.value : '0');
           } else { sets = 0; }
         }
-        const units = parseFloat(tr.querySelector('.units')?.value || '0');
+        const unitsEl = tr.querySelector('.units');
+        const units = parseFloat(unitsEl ? unitsEl.value : '0');
         total += (sets * units);
       });
       return total;
@@ -764,8 +1048,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const PERSON_RATE = 120; // $/hora por persona
       const AVG_SPEED = 35; // km/h
 
-      const lat = parseFloat(latInput?.value || '');
-      const lon = parseFloat(lonInput?.value || '');
+      const lat = parseFloat((latInput && latInput.value) ? latInput.value : '');
+      const lon = parseFloat((lonInput && lonInput.value) ? lonInput.value : '');
       if (!Number.isFinite(lat) || !Number.isFinite(lon)) return 0;
       const dist = haversineKm(WAREHOUSE.lat, WAREHOUSE.lon, lat, lon);
       const items = countTotalItems();
@@ -818,13 +1102,16 @@ document.addEventListener('DOMContentLoaded', () => {
     // Leaflet Map with click-to-set and reverse geocoding
     let leafletMap = null;
     let leafletMarker = null;
-    async function reverseGeocode(lat, lon){
+    function reverseGeocode(lat, lon){
       try {
-        const resp = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=18&addressdetails=1` , { headers: { 'Accept': 'application/json' } });
-        if (!resp.ok) return null;
-        const data = await resp.json();
-        return data.display_name || '';
-      } catch { return ''; }
+        const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=18&addressdetails=1`;
+        return fetch(url, { headers: { 'Accept': 'application/json' } })
+          .then(resp => { if (!resp.ok) return null; return resp.json(); })
+          .then(data => (data && data.display_name) ? data.display_name : '')
+          .catch(() => '');
+      } catch (e) {
+        return Promise.resolve('');
+      }
     }
     function initLeaflet(){
       if (!mapContainer || typeof L === 'undefined') return;
@@ -833,18 +1120,21 @@ document.addEventListener('DOMContentLoaded', () => {
         maxZoom: 19,
         attribution: '&copy; OpenStreetMap'
       }).addTo(leafletMap);
-      leafletMap.on('click', async (e) => {
-        const { lat, lng } = e.latlng;
+      leafletMap.on('click', (e) => {
+        const lat = e && e.latlng ? e.latlng.lat : null;
+        const lng = e && e.latlng ? e.latlng.lng : null;
+        if (lat === null || lng === null) return;
         if (latInput) latInput.value = lat.toFixed(6);
         if (lonInput) lonInput.value = lng.toFixed(6);
         if (leafletMarker) leafletMap.removeLayer(leafletMarker);
         leafletMarker = L.marker([lat, lng]).addTo(leafletMap);
         // Autocompletar dirección
-        const addr = await reverseGeocode(lat, lng);
-        const ubic = document.getElementById('ubicacion');
-        if (ubic && addr) ubic.value = addr;
-        // Recalcular transporte estimado al seleccionar en el mapa
-        try { maybeAutoSetTransport(); } catch {}
+        reverseGeocode(lat, lng).then((addr) => {
+          const ubic = document.getElementById('ubicacion');
+          if (ubic && addr) ubic.value = addr;
+          // Recalcular transporte estimado al seleccionar en el mapa
+          try { maybeAutoSetTransport(); } catch (err) {}
+        });
       });
     }
     initLeaflet();
@@ -863,8 +1153,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function computeServiceDays(){
-      const i = parseDate(inicioInput?.value);
-      const f = parseDate(finInput?.value);
+      const i = parseDate((inicioInput && inicioInput.value) ? inicioInput.value : null);
+      const f = parseDate((finInput && finInput.value) ? finInput.value : null);
       if (!i || !f) return 1; // periodo abierto o faltante -> 1 día por defecto
       if (f < i) return 1;
       // inclusivo: cuenta el día de inicio también
@@ -891,8 +1181,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function refreshPeriodoAviso(){
       if (!periodoAviso) return;
-      const i = parseDate(inicioInput?.value);
-      const f = parseDate(finInput?.value);
+      const i = parseDate((inicioInput && inicioInput.value) ? inicioInput.value : null);
+      const f = parseDate((finInput && finInput.value) ? finInput.value : null);
       if (!i) {
         periodoAviso.textContent = 'La fecha de inicio es obligatoria. La fecha de fin puede quedar abierta. Si el periodo supera 30 días se generará corte(s) para facturación.';
         return;
@@ -912,9 +1202,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function updateDaysFromPeriodo(){
       const d = computeServiceDays();
-      (partidasBody?.querySelectorAll('.days') || []).forEach(inp => {
-        inp.value = String(d);
-      });
+      const daysInputs = (partidasBody && partidasBody.querySelectorAll) ? partidasBody.querySelectorAll('.days') : [];
+      Array.prototype.forEach.call(daysInputs, (inp) => { inp.value = String(d); });
       recalc();
     }
     if (inicioInput) inicioInput.addEventListener('change', () => { refreshPeriodoAviso(); updateDaysFromPeriodo(); });
@@ -927,7 +1216,7 @@ document.addEventListener('DOMContentLoaded', () => {
       // Validar inicio requerido
       if (!inicioInput || !inicioInput.value) {
         alert('La fecha de inicio es obligatoria para guardar la orden.');
-        try { inicioInput?.focus(); } catch {}
+        try { inicioInput && inicioInput.focus && inicioInput.focus(); } catch (err) {}
         return;
       }
       // Asegurar folio definitivo al guardar
@@ -941,45 +1230,54 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       }
       const data = {
-        orderId: orderIdInput?.value,
-        cliente: ordenForm.cliente?.value,
-        obra: ordenForm.obra?.value,
-        ubicacion: ordenForm.ubicacion?.value,
-        contactoNombre: ordenForm.contactoNombre?.value,
-        contactoTelefono: ordenForm.contactoTelefono?.value,
-        latitud: ordenForm.latitud?.value,
-        longitud: ordenForm.longitud?.value,
-        inicio: ordenForm.inicio?.value,
-        fin: ordenForm.fin?.value,
-        periodicidad: ordenForm.periodicidad?.value,
-        deposito: parseFloat(ordenForm.deposito?.value || 0),
-        tipoPagoDeposito: ordenForm.tipoPagoDeposito?.value,
-        observaciones: ordenForm.observaciones?.value,
-        partidas: Array.from(partidasBody?.querySelectorAll('tr') || []).map(tr => ({
+        orderId: orderIdInput ? orderIdInput.value : undefined,
+        cliente: (ordenForm && ordenForm.cliente) ? ordenForm.cliente.value : undefined,
+        obra: (ordenForm && ordenForm.obra) ? ordenForm.obra.value : undefined,
+        ubicacion: (ordenForm && ordenForm.ubicacion) ? ordenForm.ubicacion.value : undefined,
+        contactoNombre: (ordenForm && ordenForm.contactoNombre) ? ordenForm.contactoNombre.value : undefined,
+        contactoTelefono: (ordenForm && ordenForm.contactoTelefono) ? ordenForm.contactoTelefono.value : undefined,
+        latitud: (ordenForm && ordenForm.latitud) ? ordenForm.latitud.value : undefined,
+        longitud: (ordenForm && ordenForm.longitud) ? ordenForm.longitud.value : undefined,
+        inicio: (ordenForm && ordenForm.inicio) ? ordenForm.inicio.value : undefined,
+        fin: (ordenForm && ordenForm.fin) ? ordenForm.fin.value : undefined,
+        periodicidad: (ordenForm && ordenForm.periodicidad) ? ordenForm.periodicidad.value : undefined,
+        deposito: parseFloat(((ordenForm && ordenForm.deposito) ? ordenForm.deposito.value : 0) || 0),
+        tipoPagoDeposito: (ordenForm && ordenForm.tipoPagoDeposito) ? ordenForm.tipoPagoDeposito.value : undefined,
+        observaciones: (ordenForm && ordenForm.observaciones) ? ordenForm.observaciones.value : undefined,
+        partidas: Array.from((partidasBody && partidasBody.querySelectorAll) ? partidasBody.querySelectorAll('tr') : []).map(tr => ({
           tipo: tr.dataset.tipo,
-          descripcion: tr.querySelector('.desc')?.value,
-          sets: parseFloat(tr.querySelector('.sets')?.value || 0),
-          unidades: parseFloat(tr.querySelector('.units')?.value || 0),
-          cantidad: (parseFloat(tr.querySelector('.sets')?.value || 0) * parseFloat(tr.querySelector('.units')?.value || 0)),
-          dias: parseFloat(tr.querySelector('.days')?.value || 1),
-          tarifa: parseMoney(tr.querySelector('.rate')?.value || 0)
+          descripcion: (tr.querySelector('.desc') ? tr.querySelector('.desc').value : undefined),
+          sets: parseFloat((tr.querySelector('.sets') ? tr.querySelector('.sets').value : 0) || 0),
+          unidades: parseFloat((tr.querySelector('.units') ? tr.querySelector('.units').value : 0) || 0),
+          cantidad: (parseFloat((tr.querySelector('.sets') ? tr.querySelector('.sets').value : 0) || 0) * parseFloat((tr.querySelector('.units') ? tr.querySelector('.units').value : 0) || 0)),
+          dias: parseFloat((tr.querySelector('.days') ? tr.querySelector('.days').value : 1) || 1),
+          tarifa: parseMoney((tr.querySelector('.rate') ? tr.querySelector('.rate').value : 0) || 0)
         })),
         cortes: (() => {
-          const i = parseDate(ordenForm.inicio?.value);
-          const f = parseDate(ordenForm.fin?.value);
+          const i = parseDate((ordenForm && ordenForm.inicio) ? ordenForm.inicio.value : null);
+          const f = parseDate((ordenForm && ordenForm.fin) ? ordenForm.fin.value : null);
           if (!i || !f) return [];
           return buildCortes(i, f);
         })(),
         totales: {
-          subtotal: subtotalEl?.textContent,
-          transporte: transporteInput?.value,
-          iva: ivaEl?.textContent,
-          total: totalEl?.textContent
+          subtotal: (subtotalEl && subtotalEl.textContent) ? subtotalEl.textContent : undefined,
+          transporte: (transporteInput && transporteInput.value) ? transporteInput.value : undefined,
+          iva: (ivaEl && ivaEl.textContent) ? ivaEl.textContent : undefined,
+          total: (totalEl && totalEl.textContent) ? totalEl.textContent : undefined
         }
       };
       const now = new Date().toISOString();
       const key = `orden_${now}`;
-      try { localStorage.setItem(key, JSON.stringify(data)); } catch {}
+      if (!storageAvailable()) {
+        alert('No se pudo guardar la orden en este dispositivo.\n\nCausa probable: Safari en modo privado o almacenamiento deshabilitado/lleno.\n\nSugerencia: desactiva Navegación privada, cierra/reabre Safari y vuelve a intentar.');
+        return;
+      }
+      const saveRes = trySetLocal(key, JSON.stringify(data));
+      if (!saveRes.ok) {
+        const msg = (saveRes.error && saveRes.error.message) ? saveRes.error.message : String(saveRes.error || 'Error');
+        alert('No se pudo guardar la orden en este dispositivo.\n\nDetalle: ' + msg + '\n\nSugerencia: desactiva Navegación privada o libera espacio y vuelve a intentar.');
+        return;
+      }
       alert('Orden guardada (simulada). Revisa la consola para ver el JSON.');
       console.log('Orden guardada:', key, data);
 
@@ -1004,7 +1302,7 @@ document.addEventListener('DOMContentLoaded', () => {
         updateDaysFromPeriodo();
         // Recalcular totales
         recalc();
-      } catch {}
+      } catch (err) {}
     });
   }
 
@@ -1025,9 +1323,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function recalc(){
       let ok=0, danio=0, perdida=0, sust=0, cargo=0;
-      (itemsBody?.querySelectorAll('tr') || []).forEach(tr => {
-        const estado = tr.querySelector('.estado')?.value;
-        const c = parseFloat(tr.querySelector('.cargo')?.value) || 0;
+      const rows = (itemsBody && itemsBody.querySelectorAll) ? itemsBody.querySelectorAll('tr') : [];
+      Array.prototype.forEach.call(rows, tr => {
+        const estadoEl = tr.querySelector('.estado');
+        const cargoEl = tr.querySelector('.cargo');
+        const estado = estadoEl ? estadoEl.value : '';
+        const c = parseFloat(cargoEl ? cargoEl.value : '') || 0;
         cargo += c;
         if (estado === 'ok') ok++;
         else if (estado === 'danio') danio++;
@@ -1075,30 +1376,39 @@ document.addEventListener('DOMContentLoaded', () => {
     recepForm.addEventListener('submit', (e) => {
       e.preventDefault();
       const payload = {
-        ordenId: recepForm.ordenId?.value,
-        fecha: recepForm.fecha?.value,
-        almacen: recepForm.almacen?.value,
-        inspector: recepForm.inspector?.value,
-        items: Array.from(itemsBody?.querySelectorAll('tr') || []).map(tr => ({
-          serie: tr.querySelector('.serie')?.value,
-          tipo: tr.querySelector('.tipo')?.value,
-          estado: tr.querySelector('.estado')?.value,
-          notas: tr.querySelector('.notas')?.value,
-          cargo: parseFloat(tr.querySelector('.cargo')?.value || 0),
-          evidencia: tr.querySelector('.evidencia')?.value
+        ordenId: (recepForm && recepForm.ordenId) ? recepForm.ordenId.value : undefined,
+        fecha: (recepForm && recepForm.fecha) ? recepForm.fecha.value : undefined,
+        almacen: (recepForm && recepForm.almacen) ? recepForm.almacen.value : undefined,
+        inspector: (recepForm && recepForm.inspector) ? recepForm.inspector.value : undefined,
+        items: Array.from((itemsBody && itemsBody.querySelectorAll) ? itemsBody.querySelectorAll('tr') : []).map(tr => ({
+          serie: (tr.querySelector('.serie') ? tr.querySelector('.serie').value : undefined),
+          tipo: (tr.querySelector('.tipo') ? tr.querySelector('.tipo').value : undefined),
+          estado: (tr.querySelector('.estado') ? tr.querySelector('.estado').value : undefined),
+          notas: (tr.querySelector('.notas') ? tr.querySelector('.notas').value : undefined),
+          cargo: parseFloat((tr.querySelector('.cargo') ? tr.querySelector('.cargo').value : 0) || 0),
+          evidencia: (tr.querySelector('.evidencia') ? tr.querySelector('.evidencia').value : undefined)
         })),
         resumen: {
-          ok: parseInt((document.getElementById('tOk')?.textContent)||'0', 10),
-          danio: parseInt((document.getElementById('tDanio')?.textContent)||'0', 10),
-          perdida: parseInt((document.getElementById('tPerdida')?.textContent)||'0', 10),
-          sustitucion: parseInt((document.getElementById('tSust')?.textContent)||'0', 10),
-          cargos: document.getElementById('tCargo')?.textContent
+          ok: parseInt(((document.getElementById('tOk') && document.getElementById('tOk').textContent) || '0'), 10),
+          danio: parseInt(((document.getElementById('tDanio') && document.getElementById('tDanio').textContent) || '0'), 10),
+          perdida: parseInt(((document.getElementById('tPerdida') && document.getElementById('tPerdida').textContent) || '0'), 10),
+          sustitucion: parseInt(((document.getElementById('tSust') && document.getElementById('tSust').textContent) || '0'), 10),
+          cargos: (document.getElementById('tCargo') && document.getElementById('tCargo').textContent) ? document.getElementById('tCargo').textContent : undefined
         },
-        observaciones: recepForm.observ?.value,
-        firma: recepForm.firma?.value
+        observaciones: (recepForm && recepForm.observ) ? recepForm.observ.value : undefined,
+        firma: (recepForm && recepForm.firma) ? recepForm.firma.value : undefined
       };
       const key = `recepcion_${new Date().toISOString()}`;
-      try { localStorage.setItem(key, JSON.stringify(payload)); } catch {}
+      if (!storageAvailable()) {
+        alert('No se pudo guardar la recepción en este dispositivo.\n\nCausa probable: Safari en modo privado o almacenamiento deshabilitado/lleno.');
+        return;
+      }
+      const saveRes = trySetLocal(key, JSON.stringify(payload));
+      if (!saveRes.ok) {
+        const msg = (saveRes.error && saveRes.error.message) ? saveRes.error.message : String(saveRes.error || 'Error');
+        alert('No se pudo guardar la recepción en este dispositivo.\n\nDetalle: ' + msg);
+        return;
+      }
       alert('Recepción guardada (simulada). Revisa la consola para ver el JSON.');
       console.log('Recepción guardada:', key, payload);
     });
