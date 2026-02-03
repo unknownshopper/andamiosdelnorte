@@ -112,6 +112,24 @@
       <p class="muted">Registra cada pieza recibida, su estado y cargos correspondientes. Datos guardados de forma simulada en el navegador.</p>
 
       <form id="recepForm" class="grid" autocomplete="off">
+        <section class="card span-12">
+          <h2>Cola de devoluciones (próximas)</h2>
+          <div class="row" style="align-items:end;">
+            <div>
+              <label for="recepQueueSelect">Orden próxima a devolución</label>
+              <select id="recepQueueSelect">
+                <option value="">Seleccionar…</option>
+              </select>
+              <div class="note">Se ordena por fecha fin más cercana. Incluye vencidas.</div>
+            </div>
+            <div>
+              <label>Detalle</label>
+              <div id="recepQueueDetail" class="muted">—</div>
+            </div>
+          </div>
+          <div id="recepQueueList" class="muted" style="margin-top:10px;"></div>
+        </section>
+
         <section class="card span-6">
           <h2>Datos generales</h2>
           <div class="row">

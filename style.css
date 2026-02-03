@@ -6,6 +6,7 @@
   --muted: #475569; /* slate-600 */
   --line: #e2e8f0;  /* slate-200 */
   --accent: #0ea5a4; /* teal-500 */
+  --brand_orange: #f97316; /* orange-500 */
 }
 
 /* Base */
@@ -22,6 +23,12 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 .container { max-width: 1100px; margin: 0 auto; padding: 0 20px; }
+@media (min-width: 1200px) {
+  .container { max-width: 95vw; }
+}
+@media (min-width: 1800px) {
+  .container { max-width: 1700px; }
+}
 .muted { color: var(--muted); }
 main { padding: 32px 0 60px; }
 /* Visibility helper for existence indicator */
@@ -107,6 +114,53 @@ th, td { padding: 10px; border-bottom: 1px solid var(--line); text-align: left; 
 th { font-size: 13px; color: var(--muted); font-weight: 700; }
 tfoot td { font-weight: 700; }
 
+/* Document sheets (Cotización / Contrato) */
+.doc-shell { background: #f8fafc; }
+.doc-actions { display:flex; justify-content:flex-end; gap:10px; padding: 12px 0 0; }
+.doc-sheet {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(15,23,42,0.08);
+  overflow: hidden;
+}
+.doc-letterhead {
+  background: linear-gradient(90deg, var(--brand_orange), #fb923c);
+  color: #fff;
+  padding: 20px 18px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap: 12px;
+}
+.doc-letterhead .doc-brand { display:flex; align-items:center; gap: 10px; }
+.doc-letterhead .doc-logo { height: 44px; filter: brightness(0) invert(1); }
+.doc-letterhead .doc-title { font-weight: 900; letter-spacing: 0.4px; }
+.doc-letterhead .doc-meta { text-align:right; font-size: 12px; opacity: 0.95; }
+.doc-body { padding: 18px; }
+.doc-kv { display:grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.doc-kv .kv { border: 1px solid var(--line); border-radius: 10px; padding: 12px; }
+.doc-kv .kv .k { font-size: 12px; color: rgba(255,255,255,0.9); }
+.doc-kv .kv .v { font-weight: 800; }
+.doc-section-title { margin: 14px 0 8px; font-size: 14px; font-weight: 900; color: #0f172a; }
+.doc-note { font-size: 13px; color: var(--muted); }
+.doc-totals { width: 360px; margin-left:auto; }
+
+@media (max-width: 640px) {
+  .doc-body { padding: 14px; }
+  .doc-letterhead { flex-direction: column; align-items: flex-start; }
+  .doc-letterhead .doc-meta { text-align:left; }
+  .doc-totals { width: 100%; }
+}
+
+@media print {
+  body { background: #fff; }
+  header.hero, footer.site-footer, .doc-actions { display:none !important; }
+  .doc-shell { background: #fff; }
+  .doc-sheet { box-shadow: none; border: 0; border-radius: 0; }
+  .container { max-width: none !important; padding: 0 !important; }
+}
+
 /* Partidas: tipo badge y resaltado */
 .type-badge { display:inline-block; padding: 2px 8px; font-size: 12px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted); background: #f8fafc; }
 .type-badge.is-conjunto { background: #ecfeff; color: var(--accent); border-color: #99f6e4; }
@@ -181,4 +235,38 @@ tbody tr.row-conjunto.group-b td { background: #ffffff; }
 @media (min-width: 720px) {
   .card.span-6 { grid-column: span 6; }
   .card.span-4 { grid-column: span 4; }
+}
+
+@media (max-width: 640px) {
+  .container { padding: 0 14px; }
+  .hero .container.hero-inner { padding: 16px 0; flex-direction: column; align-items: flex-start; }
+  .hero nav { width: 100%; display: flex; flex-wrap: wrap; gap: 8px; }
+  .hero nav .btn { padding: 10px 12px; }
+  main { padding: 18px 0 44px; }
+
+  .row { grid-template-columns: 1fr; }
+  .row-3 { grid-template-columns: 1fr; }
+
+  /* Orden: mapa más compacto */
+  #map { min-height: 260px; }
+
+  /* Partidas: grid de piezas en 2 columnas para teléfono */
+  .pieza-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+  /* Partidas: tabla más legible en teléfono (ocultar columnas secundarias) */
+  #partidasTabla th:nth-child(2),
+  #partidasTabla td:nth-child(2),
+  #partidasTabla th:nth-child(4),
+  #partidasTabla td:nth-child(4),
+  #partidasTabla th:nth-child(5),
+  #partidasTabla td:nth-child(5),
+  #partidasTabla th:nth-child(6),
+  #partidasTabla td:nth-child(6) {
+    display: none;
+  }
+
+  #partidasTabla colgroup { display: none; }
+
+  /* Botones en listados: más cómodos */
+  td[style*="white-space:nowrap"] .btn { margin-bottom: 6px; }
 }

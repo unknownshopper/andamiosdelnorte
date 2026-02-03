@@ -104,13 +104,553 @@ document.addEventListener('DOMContentLoaded', () => {
     function rl_money(n){
       try { return new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(Number(n)||0); } catch(e){ return '$ 0.00'; }
     }
+    function rl_parseMoney(v){
+      if (v === undefined || v === null) return 0;
+      if (typeof v === 'number') return isFinite(v) ? v : 0;
+      const s = String(v).replace(/[^0-9,.-]/g, '').replace(/,/g, '');
+      const n = parseFloat(s);
+      return isNaN(n) ? 0 : n;
+    }
+    function rl_moneyAny(v){
+      // Formatea números o strings ($, comas) a MXN
+      return rl_money(rl_parseMoney(v));
+    }
     function rl_safeParse(s){ try { return JSON.parse(s); } catch (e) { return null; } }
     function rl_readAll(){
       const keys = Object.keys(localStorage).filter(k => k.startsWith('orden_')).sort();
       return keys.map(k => ({ key: k, data: rl_safeParse(localStorage.getItem(k)) })).filter(x => !!x.data);
     }
-    function rl_state(o){ return (o && o.fin) ? 'Cerrada' : 'Abierta'; }
+    function rl_salidaProgress(o){
+      const s = (o && o.salida) ? o.salida : null;
+      if (!s) return { status: 'pendiente', label: 'Pendiente salida' };
+      if (s.status === 'lista') return { status: 'lista', label: 'Lista para entrega' };
+      if (s.status === 'preparando') return { status: 'preparando', label: 'En preparación' };
+      // fallback: si hay algún dato capturado, asumir preparando
+      const hasAny = !!(
+        (s.asignadoA && String(s.asignadoA).trim()) ||
+        (s.almacen && String(s.almacen).trim()) ||
+        (s.responsable && String(s.responsable).trim()) ||
+        (s.chofer && String(s.chofer).trim()) ||
+        (s.placas && String(s.placas).trim()) ||
+        (s.unidad && String(s.unidad).trim()) ||
+        (s.checklist && Object.keys(s.checklist).some(k => !!s.checklist[k]))
+      );
+      return hasAny ? { status: 'preparando', label: 'En preparación' } : { status: 'pendiente', label: 'Pendiente salida' };
+    }
+
+    function rl_state(o){
+      if (o && o.fin) return 'Cerrada';
+      const p = rl_salidaProgress(o);
+      return p.label;
+    }
     function rl_escape(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c])); }
+
+    function rl_findLatestRecepcion(orderId){
+      try {
+        const keys = Object.keys(localStorage).filter(k => k.startsWith('recepcion_')).sort();
+        let latest = null;
+        for (let i = keys.length - 1; i >= 0; i--) {
+          const raw = localStorage.getItem(keys[i]);
+          if (!raw) continue;
+          const r = rl_safeParse(raw);
+          if (!r) continue;
+          if (String(r.ordenId || '') === String(orderId || '')) {
+            latest = r;
+            break;
+          }
+        }
+        return latest;
+      } catch (e) { return null; }
+    }
+
+    function rl_docTitle(kind){
+      if (kind === 'cot') return 'Cotización';
+      if (kind === 'contrato') return 'Contrato';
+      if (kind === 'salida') return 'Orden de salida';
+      if (kind === 'recepcion') return 'Recepción';
+      return 'Documento';
+    }
+
+    function rl_openOrderDoc(orderData, kind, orderKey){
+      const w = window.open('about:blank', '_blank');
+      if (!w) return;
+
+      const baseHref = String(location.href).replace(/[^/]*$/, '');
+      const orderId = (orderData && orderData.orderId) ? orderData.orderId : '—';
+      const cliente = (orderData && orderData.cliente) ? orderData.cliente : '—';
+      const obra = (orderData && orderData.obra) ? orderData.obra : '—';
+      const inicio = (orderData && orderData.inicio) ? orderData.inicio : '—';
+      const fin = (orderData && orderData.fin) ? orderData.fin : '—';
+      const ubicacion = (orderData && orderData.ubicacion) ? orderData.ubicacion : '—';
+      const contactoNombre = (orderData && orderData.contactoNombre) ? orderData.contactoNombre : '—';
+      const contactoTelefono = (orderData && orderData.contactoTelefono) ? orderData.contactoTelefono : '—';
+      const depositoRaw = (orderData && orderData.deposito !== undefined && orderData.deposito !== null) ? orderData.deposito : null;
+      const tipoPagoDeposito = (orderData && orderData.tipoPagoDeposito) ? orderData.tipoPagoDeposito : '—';
+      const subtotalRaw = (orderData && orderData.totales && orderData.totales.subtotal !== undefined && orderData.totales.subtotal !== null) ? orderData.totales.subtotal : null;
+      const transporteRaw = (orderData && orderData.totales && orderData.totales.transporte !== undefined && orderData.totales.transporte !== null) ? orderData.totales.transporte : null;
+      const ivaRaw = (orderData && orderData.totales && orderData.totales.iva !== undefined && orderData.totales.iva !== null) ? orderData.totales.iva : null;
+      const totalRaw = (orderData && orderData.totales && orderData.totales.total !== undefined && orderData.totales.total !== null) ? orderData.totales.total : null;
+
+      const deposito = (depositoRaw === null) ? '—' : rl_moneyAny(depositoRaw);
+      const subtotal = (subtotalRaw === null) ? '—' : rl_moneyAny(subtotalRaw);
+      const transporte = (transporteRaw === null) ? '—' : rl_moneyAny(transporteRaw);
+      const iva = (ivaRaw === null) ? '—' : rl_moneyAny(ivaRaw);
+      const total = (totalRaw === null) ? '—' : rl_moneyAny(totalRaw);
+
+      const title = rl_docTitle(kind);
+      const partidas = Array.isArray(orderData && orderData.partidas) ? orderData.partidas : [];
+      const partidasRows = partidas.map((p) => {
+        const sets = (p && (p.sets !== undefined && p.sets !== null)) ? p.sets : '';
+        const unidades = (p && (p.unidades !== undefined && p.unidades !== null)) ? p.unidades : '';
+        const dias = (p && (p.dias !== undefined && p.dias !== null)) ? p.dias : '';
+        const tarifa = (p && (p.tarifa !== undefined && p.tarifa !== null)) ? p.tarifa : '';
+        const cantidad = (p && (p.cantidad !== undefined && p.cantidad !== null)) ? p.cantidad : '';
+        const desc = rl_escape((p && p.descripcion) ? p.descripcion : '—');
+        const tipo = rl_escape((p && p.tipo) ? p.tipo : '—');
+        return (
+          '<tr>'+
+            '<td>'+rl_escape(String(sets))+'</td>'+
+            '<td>'+tipo+'</td>'+
+            '<td>'+desc+'</td>'+
+            '<td>'+rl_escape(String(unidades))+'</td>'+
+            '<td>'+rl_escape(String(dias))+'</td>'+
+            '<td>'+rl_escape(String(tarifa))+'</td>'+
+            '<td>'+rl_escape(String(cantidad))+'</td>'+
+          '</tr>'
+        );
+      }).join('');
+
+      let extraCard = '';
+      if (kind === 'contrato') {
+        const empresaNombre = 'Andamios del Norte';
+        extraCard = (
+          '<div class="card span-12">'+
+            '<h2>Contrato de arrendamiento de equipo (andamios)</h2>'+
+            '<div class="muted" style="margin-bottom:10px;">Documento generado por el sistema a partir de la orden. Requiere revisión y firma.</div>'+
+            '<div style="display:grid; gap:10px;">'+
+              '<p><strong>ARRENDADOR:</strong> '+rl_escape(empresaNombre)+' (en lo sucesivo, el "ARRENDADOR").</p>'+
+              '<p><strong>ARRENDATARIO:</strong> '+rl_escape(cliente)+' (en lo sucesivo, el "ARRENDATARIO").</p>'+
+              '<p><strong>OBJETO:</strong> El ARRENDADOR da en arrendamiento temporal al ARRENDATARIO el equipo descrito en la sección de <strong>Partidas</strong> de este documento (en lo sucesivo, el "EQUIPO"), para ser utilizado exclusivamente en la obra/proyecto: <strong>'+rl_escape(obra)+'</strong>, ubicada en: <strong>'+rl_escape(ubicacion)+'</strong>.</p>'+
+              '<p><strong>VIGENCIA:</strong> El presente arrendamiento inicia el día <strong>'+rl_escape(inicio)+'</strong>'+
+                ((fin && fin !== '—') ? (' y concluye el día <strong>'+rl_escape(fin)+'</strong>.') : ' y su término queda abierto hasta que exista recepción y cierre de orden.')+
+              '</p>'+
+              '<p><strong>PRECIO Y PAGO:</strong> El ARRENDATARIO pagará al ARRENDADOR las rentas conforme a las tarifas y condiciones reflejadas en el apartado de <strong>Totales</strong> (Subtotal, Transporte, IVA y Total). Las partes aceptan que el monto puede actualizarse por ampliaciones, incrementos de equipo, devoluciones parciales o cortes de facturación.</p>'+
+              '<p><strong>DEPÓSITO:</strong> El ARRENDATARIO entrega un depósito en garantía por la cantidad de <strong>'+rl_escape(String(deposito))+'</strong> ('+rl_escape(String(tipoPagoDeposito))+'). El depósito garantiza el cumplimiento de las obligaciones, el retorno del EQUIPO y el pago de daños, pérdidas o cargos. El depósito podrá aplicarse total o parcialmente a adeudos, daños o faltantes.</p>'+
+              '<p><strong>ENTREGA (SALIDA):</strong> La entrega del EQUIPO se realizará en la fecha de inicio y/o conforme a la Orden de salida. El ARRENDATARIO revisa cantidades y condición al momento de entrega, aceptando el EQUIPO salvo observación asentada por escrito.</p>'+
+              '<p><strong>USO Y CUSTODIA:</strong> El ARRENDATARIO se obliga a: (i) usar el EQUIPO de forma adecuada y segura, (ii) no modificar ni desarmar piezas de forma indebida, (iii) impedir su sustracción, (iv) mantenerlo bajo resguardo, (v) cumplir con normas de seguridad aplicables y (vi) no subarrendar, prestar o ceder el EQUIPO sin autorización del ARRENDADOR.</p>'+
+              '<p><strong>DEVOLUCIÓN (RECEPCIÓN):</strong> El ARRENDATARIO devolverá el EQUIPO en la fecha acordada o cuando se requiera por término del arrendamiento. La devolución se documentará mediante Recepción/Inspección. Se permiten devoluciones parciales; las rentas y saldos se ajustarán conforme a los movimientos registrados y a la inspección del EQUIPO.</p>'+
+              '<p><strong>DAÑOS, PÉRDIDAS Y CARGOS:</strong> Cualquier daño, pérdida, robo o faltante del EQUIPO será responsabilidad del ARRENDATARIO. Los cargos por reparación, reposición o sustitución se determinarán en la Recepción/Inspección y podrán descontarse del depósito. Si el depósito no cubre los cargos, el ARRENDATARIO pagará la diferencia.</p>'+
+              '<p><strong>TRANSPORTE:</strong> Cuando aplique, el transporte, maniobras y tiempos de entrega/recolección se cobrarán conforme al rubro de Transporte y/o condiciones pactadas. Accesos complicados, horarios especiales o reprogramaciones podrán generar cargos adicionales.</p>'+
+              '<p><strong>FACTURACIÓN Y CORTES:</strong> En rentas que excedan periodos de 30 días o periodos abiertos, podrán generarse cortes de facturación. La falta de pago faculta al ARRENDADOR a suspender servicio, retirar EQUIPO y/o dar por terminado el contrato, sin perjuicio de cobrar adeudos.</p>'+
+              '<p><strong>TERMINACIÓN ANTICIPADA:</strong> El ARRENDATARIO podrá terminar anticipadamente devolviendo el EQUIPO. La terminación no exime del pago de rentas devengadas, transporte, cargos por daños o faltantes, ni de cualquier saldo pendiente.</p>'+
+              '<p><strong>JURISDICCIÓN:</strong> Para la interpretación y cumplimiento del presente contrato, las partes se someten a las leyes y tribunales competentes del domicilio del ARRENDADOR, renunciando a cualquier otro fuero que pudiera corresponderles por razón de sus domicilios presentes o futuros.</p>'+
+
+              '<div style="display:grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 14px;">'+
+                '<div>'+
+                  '<div style="height:38px;"></div>'+
+                  '<div style="border-top:1px solid var(--line); padding-top:8px;"><strong>ARRENDADOR</strong><div class="muted">'+rl_escape(empresaNombre)+'</div></div>'+
+                '</div>'+
+                '<div>'+
+                  '<div style="height:38px;"></div>'+
+                  '<div style="border-top:1px solid var(--line); padding-top:8px;"><strong>ARRENDATARIO</strong><div class="muted">'+rl_escape(cliente)+'</div></div>'+
+                '</div>'+
+              '</div>'+
+            '</div>'+
+          '</div>'
+        );
+      } else if (kind === 'salida') {
+        const s0 = (orderData && orderData.salida) ? orderData.salida : {};
+        const asignadoA0 = rl_escape((s0 && s0.asignadoA) ? s0.asignadoA : '');
+        const almacen0 = rl_escape((s0 && s0.almacen) ? s0.almacen : '');
+        const responsable0 = rl_escape((s0 && s0.responsable) ? s0.responsable : '');
+        const unidad0 = rl_escape((s0 && s0.unidad) ? s0.unidad : '');
+        const placas0 = rl_escape((s0 && s0.placas) ? s0.placas : '');
+        const chofer0 = rl_escape((s0 && s0.chofer) ? s0.chofer : '');
+        extraCard = (
+          '<div class="card span-12">'+
+            '<h2>Orden de salida (checklist)</h2>'+
+            '<div class="muted" style="margin-bottom:10px;">Formato para control de entrega. Completar por almacén y responsable de salida.</div>'+
+            '<div class="grid" style="grid-template-columns: repeat(12, 1fr); gap: 12px; margin-bottom: 12px;">'+
+              '<div class="card span-4" style="padding:12px;">'+
+                '<div class="muted"><strong>Fecha de salida:</strong></div>'+
+                '<div>'+rl_escape(inicio)+'</div>'+
+              '</div>'+
+              '<div class="card span-4" style="padding:12px;">'+
+                '<div class="muted"><strong>Asignado a:</strong></div>'+
+                '<input id="salida_asignadoA" value="'+asignadoA0+'" placeholder="Bodeguero/almacenista" />'+
+              '</div>'+
+              '<div class="card span-4" style="padding:12px;">'+
+                '<div class="muted"><strong>Almacén que supervisa:</strong></div>'+
+                '<input id="salida_almacen" value="'+almacen0+'" placeholder="Sucursal/Almacén" />'+
+              '</div>'+
+              '<div class="card span-6" style="padding:12px;">'+
+                '<div class="muted"><strong>Supervisor / Responsable:</strong></div>'+
+                '<input id="salida_responsable" value="'+responsable0+'" placeholder="Nombre" />'+
+              '</div>'+
+              '<div class="card span-6" style="padding:12px;">'+
+                '<div class="muted"><strong>Unidad / Camión:</strong></div>'+
+                '<input id="salida_unidad" value="'+unidad0+'" placeholder="Tipo / No. unidad" />'+
+              '</div>'+
+              '<div class="card span-6" style="padding:12px;">'+
+                '<div class="muted"><strong>Placas:</strong></div>'+
+                '<input id="salida_placas" value="'+placas0+'" placeholder="ABC-123" />'+
+              '</div>'+
+              '<div class="card span-6" style="padding:12px;">'+
+                '<div class="muted"><strong>Chofer:</strong></div>'+
+                '<input id="salida_chofer" value="'+chofer0+'" placeholder="Nombre" />'+
+              '</div>'+
+            '</div>'+
+
+            '<h3 style="margin: 0 0 8px; font-size:16px;">Checklist de salida</h3>'+
+            '<div style="overflow:auto;">'+
+              '<table>'+
+                '<thead><tr><th style="width:44px;">OK</th><th>Verificación</th><th style="width:34%;">Notas</th></tr></thead>'+
+                '<tbody>'+
+                  '<tr><td><input type="checkbox" data-ck="partidas" /></td><td>Partidas y cantidades revisadas contra la orden</td><td style="border-bottom:1px solid var(--line);"></td></tr>'+
+                  '<tr><td><input type="checkbox" data-ck="condicion" /></td><td>Equipo en condición adecuada (sin daño visible)</td><td style="border-bottom:1px solid var(--line);"></td></tr>'+
+                  '<tr><td><input type="checkbox" data-ck="evidencia" /></td><td>Equipo identificado / evidencias (foto) tomadas</td><td style="border-bottom:1px solid var(--line);"></td></tr>'+
+                  '<tr><td><input type="checkbox" data-ck="accesorios" /></td><td>Accesorios incluidos (bases, abrazaderas, etc.)</td><td style="border-bottom:1px solid var(--line);"></td></tr>'+
+                  '<tr><td><input type="checkbox" data-ck="direccion" /></td><td>Dirección y contacto confirmados: '+rl_escape(ubicacion)+'</td><td style="border-bottom:1px solid var(--line);"></td></tr>'+
+                  '<tr><td><input type="checkbox" data-ck="ventana" /></td><td>Ventana de entrega confirmada con el cliente</td><td style="border-bottom:1px solid var(--line);"></td></tr>'+
+                  '<tr><td><input type="checkbox" data-ck="deposito" /></td><td>Depósito recibido/validado: '+rl_escape(String(deposito))+' ('+rl_escape(String(tipoPagoDeposito))+')</td><td style="border-bottom:1px solid var(--line);"></td></tr>'+
+                '</tbody>'+
+              '</table>'+
+            '</div>'+
+
+            '<div style="display:flex; gap:10px; flex-wrap:wrap; margin-top: 14px;">'+
+              '<button class="btn accent" type="button" id="salida_save">Guardar progreso</button>'+
+              '<button class="btn" type="button" id="salida_ready">Marcar lista para entrega</button>'+
+              '<div class="muted" id="salida_msg" style="align-self:center;"></div>'+
+            '</div>'+
+
+            '<div style="display:grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 14px;">'+
+              '<div>'+
+                '<div style="height:38px;"></div>'+
+                '<div style="border-top:1px solid var(--line); padding-top:8px;"><strong>Firma almacén / responsable</strong><div class="muted">Nombre y firma</div></div>'+
+              '</div>'+
+              '<div>'+
+                '<div style="height:38px;"></div>'+
+                '<div style="border-top:1px solid var(--line); padding-top:8px;"><strong>Firma cliente / receptor</strong><div class="muted">Nombre, firma y hora de recepción</div></div>'+
+              '</div>'+
+            '</div>'+
+          '</div>'
+        );
+      } else if (kind === 'cot') {
+        extraCard = (
+          '<div class="card span-12">'+
+            '<h2>Condiciones</h2>'+
+            '<div class="muted">Cotización sujeta a disponibilidad y confirmación. Vigencia y condiciones por definir.</div>'+
+          '</div>'
+        );
+      }
+
+      const showPartidas = (kind !== 'salida');
+      const showTotales = (kind !== 'salida');
+
+      const partidasSection = showPartidas ? (
+        '<div class="card span-12">'+
+          '<h2>Partidas</h2>'+
+          '<div style="overflow:auto;">'+
+            '<table>'+
+              '<thead>'+
+                '<tr>'+
+                  '<th>Cantidad</th>'+
+                  '<th>Tipo</th>'+
+                  '<th>Descripción</th>'+
+                  '<th>Unidades</th>'+
+                  '<th>Días</th>'+
+                  '<th>Tarifa</th>'+
+                  '<th>Total piezas</th>'+
+                '</tr>'+
+              '</thead>'+
+              '<tbody>'+
+                (partidasRows || '<tr><td colspan="7" class="muted">Sin partidas</td></tr>')+
+              '</tbody>'+
+            '</table>'+
+          '</div>'+
+        '</div>'
+      ) : '';
+
+      const totalesSection = showTotales ? (
+        '<div class="card span-12">'+
+          '<h2>Totales</h2>'+
+          '<div style="overflow:auto;">'+
+            '<table>'+
+              '<tbody>'+
+                '<tr><td class="muted">Subtotal</td><td style="text-align:right;"><strong>'+rl_escape(String(subtotal))+'</strong></td></tr>'+
+                '<tr><td class="muted">Transporte</td><td style="text-align:right;">'+rl_escape(String(transporte))+'</td></tr>'+
+                '<tr><td class="muted">IVA</td><td style="text-align:right;">'+rl_escape(String(iva))+'</td></tr>'+
+                '<tr><td><strong>Total</strong></td><td style="text-align:right;"><strong>'+rl_escape(String(total))+'</strong></td></tr>'+
+                '<tr><td class="muted">Depósito</td><td style="text-align:right;">'+rl_escape(String(deposito))+' <span class="muted">('+rl_escape(tipoPagoDeposito)+')</span></td></tr>'+
+              '</tbody>'+
+            '</table>'+
+          '</div>'+
+        '</div>'
+      ) : '';
+
+      const isLetterDoc = (kind === 'cot' || kind === 'contrato');
+      let docFecha = '';
+      try { docFecha = new Date().toLocaleDateString('es-MX'); } catch (e) { docFecha = ''; }
+
+      w.document.write(
+        '<!doctype html>'+
+        '<html lang="es">'+
+        '<head>'+
+          '<meta charset="utf-8" />'+
+          '<meta name="viewport" content="width=device-width, initial-scale=1" />'+
+          '<title>'+rl_escape(title)+' · '+rl_escape(orderId)+' | andamios.com</title>'+
+          '<base href="'+rl_escape(baseHref)+'" />'+
+          '<link rel="icon" href="img/icon.png" />'+
+          '<link rel="stylesheet" href="style.css" />'+
+        '</head>'+
+        '<body'+(isLetterDoc ? ' class="doc-shell"' : '')+'>'+
+          (isLetterDoc ? (
+            '<main class="container">'+
+              '<div class="doc-actions">'+
+                '<button class="btn" type="button" onclick="window.close()">Cerrar</button>'+
+                '<button class="btn accent" type="button" onclick="window.print()">Imprimir</button>'+
+              '</div>'+
+              '<div class="doc-sheet" style="margin-top:12px;">'+
+                '<div class="doc-letterhead">'+
+                  '<div class="doc-brand">'+
+                    '<img class="doc-logo" src="img/logo.png" alt="andamios.com" />'+
+                    '<div class="doc-title">'+rl_escape(title)+'</div>'+
+                  '</div>'+
+                  '<div class="doc-meta">'+
+                    '<div><strong>Folio:</strong> '+rl_escape(orderId)+'</div>'+
+                    (docFecha ? ('<div><strong>Fecha:</strong> '+rl_escape(docFecha)+'</div>') : '')+
+                  '</div>'+
+                '</div>'+
+                '<div class="doc-body">'+
+                  '<div class="doc-kv" style="margin-bottom:12px;">'+
+                    '<div class="kv">'+
+                      '<div class="muted"><strong>Cliente</strong></div>'+
+                      '<div style="font-weight:900;">'+rl_escape(cliente)+'</div>'+
+                      '<div class="muted" style="margin-top:6px;"><strong>Obra</strong></div>'+
+                      '<div>'+rl_escape(obra)+'</div>'+
+                    '</div>'+
+                    '<div class="kv">'+
+                      '<div class="muted"><strong>Ubicación</strong></div>'+
+                      '<div>'+rl_escape(ubicacion)+'</div>'+
+                      '<div class="muted" style="margin-top:6px;"><strong>Contacto</strong></div>'+
+                      '<div>'+rl_escape(contactoNombre)+' · '+rl_escape(contactoTelefono)+'</div>'+
+                    '</div>'+
+                  '</div>'+
+                  '<div class="doc-section-title">Periodo</div>'+
+                  '<div class="doc-note"><strong>Inicio:</strong> '+rl_escape(inicio)+' &nbsp; <strong>Fin:</strong> '+rl_escape(fin)+'</div>'+
+                  '<div class="doc-section-title">Partidas</div>'+
+                  partidasSection+
+                  '<div class="doc-section-title">Totales</div>'+
+                  '<div class="doc-totals">'+
+                    '<table>'+
+                      '<tbody>'+
+                        '<tr><td class="muted">Subtotal</td><td style="text-align:right;"><strong>'+rl_escape(String(subtotal))+'</strong></td></tr>'+
+                        '<tr><td class="muted">IVA</td><td style="text-align:right;">'+rl_escape(String(iva))+'</td></tr>'+
+                        '<tr><td><strong>Total</strong></td><td style="text-align:right;"><strong>'+rl_escape(String(total))+'</strong></td></tr>'+
+                        '<tr><td class="muted">Depósito</td><td style="text-align:right;">'+rl_escape(String(deposito))+' <span class="muted">('+rl_escape(tipoPagoDeposito)+')</span></td></tr>'+
+                      '</tbody>'+
+                    '</table>'+
+                  '</div>'+
+                  extraCard+
+                '</div>'+
+              '</div>'+
+            '</main>'
+          ) : (
+            '<header class="hero">'+
+              '<div class="container hero-inner">'+
+                '<a class="brand" href="rentlist.html">'+
+                  '<img class="brand-logo" src="img/logo.png" alt="andamios.com" />'+
+                  '<span class="brand-name">andamios.com</span>'+
+                '</a>'+
+                '<nav>'+
+                  '<button class="btn" type="button" onclick="window.close()">Cerrar</button>'+
+                '</nav>'+
+              '</div>'+
+            '</header>'+
+            '<main class="container">'+
+              '<h1>'+rl_escape(title)+'</h1>'+
+              '<p class="muted">Orden '+rl_escape(orderId)+'</p>'+
+              '<section class="grid" style="margin-top:12px;">'+
+                '<div class="card span-6">'+
+                  '<h2>Cliente y obra</h2>'+
+                  '<div class="muted"><strong>Cliente:</strong> '+rl_escape(cliente)+'</div>'+
+                  '<div class="muted"><strong>Obra:</strong> '+rl_escape(obra)+'</div>'+
+                  '<div class="muted"><strong>Inicio:</strong> '+rl_escape(inicio)+'</div>'+
+                  '<div class="muted"><strong>Fin:</strong> '+rl_escape(fin)+'</div>'+
+                '</div>'+
+                '<div class="card span-6">'+
+                  '<h2>Contacto</h2>'+
+                  '<div class="muted"><strong>Nombre:</strong> '+rl_escape(contactoNombre)+'</div>'+
+                  '<div class="muted"><strong>Teléfono:</strong> '+rl_escape(contactoTelefono)+'</div>'+
+                  '<div class="muted"><strong>Ubicación:</strong> '+rl_escape(ubicacion)+'</div>'+
+                '</div>'+
+                partidasSection+
+                totalesSection+
+                extraCard+
+              '</section>'+
+            '</main>'
+          ))+
+          (kind === 'salida' ? (
+          '<script>'+
+          '(function(){\n'+
+          '  try {\n'+
+          '    var orderKey = '+JSON.stringify(String(orderKey || ''))+';\n'+
+          '    function esc(s){ return String(s).replace(/[&<>"\"]/g, function(c){ return ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"})[c] || c; }); }\n'+
+          '    function safeParse(raw){ try { return JSON.parse(raw); } catch(e){ return null; } }\n'+
+          '    function load(){\n'+
+          '      if (!orderKey) return null;\n'+
+          '      var raw = localStorage.getItem(orderKey);\n'+
+          '      if (!raw) return null;\n'+
+          '      return safeParse(raw);\n'+
+          '    }\n'+
+          '    function save(o){\n'+
+          '      if (!orderKey) return false;\n'+
+          '      try { localStorage.setItem(orderKey, JSON.stringify(o)); return true; } catch(e){ return false; }\n'+
+          '    }\n'+
+          '    function getVal(id){ var el = document.getElementById(id); return el ? String(el.value||"").trim() : ""; }\n'+
+          '    function readChecklist(){\n'+
+          '      var m = {};\n'+
+          '      var els = document.querySelectorAll("input[type=checkbox][data-ck]");\n'+
+          '      for (var i=0;i<els.length;i++){ var k = els[i].getAttribute("data-ck"); m[k] = !!els[i].checked; }\n'+
+          '      return m;\n'+
+          '    }\n'+
+          '    function applyChecklist(m){\n'+
+          '      if (!m) return;\n'+
+          '      var els = document.querySelectorAll("input[type=checkbox][data-ck]");\n'+
+          '      for (var i=0;i<els.length;i++){ var k = els[i].getAttribute("data-ck"); els[i].checked = !!m[k]; }\n'+
+          '    }\n'+
+          '    function allChecked(m){\n'+
+          '      var keys = ["partidas","condicion","evidencia","accesorios","direccion","ventana","deposito"];\n'+
+          '      for (var i=0;i<keys.length;i++){ if (!m[keys[i]]) return false; }\n'+
+          '      return true;\n'+
+          '    }\n'+
+          '    function writeMsg(t){ var box = document.getElementById("salida_msg"); if (box) box.textContent = t || ""; }\n'+
+          '    function hydrate(){\n'+
+          '      var o = load();\n'+
+          '      if (!o) return;\n'+
+          '      var s = o.salida || {};\n'+
+          '      applyChecklist(s.checklist || {});\n'+
+          '    }\n'+
+          '    function update(status){\n'+
+          '      var o = load();\n'+
+          '      if (!o) { writeMsg("No se encontró la orden."); return; }\n'+
+          '      o.salida = o.salida || {};\n'+
+          '      o.salida.asignadoA = getVal("salida_asignadoA");\n'+
+          '      o.salida.almacen = getVal("salida_almacen");\n'+
+          '      o.salida.responsable = getVal("salida_responsable");\n'+
+          '      o.salida.unidad = getVal("salida_unidad");\n'+
+          '      o.salida.placas = getVal("salida_placas");\n'+
+          '      o.salida.chofer = getVal("salida_chofer");\n'+
+          '      o.salida.checklist = readChecklist();\n'+
+          '      var any = (o.salida.asignadoA || o.salida.almacen || o.salida.responsable || o.salida.unidad || o.salida.placas || o.salida.chofer);\n'+
+          '      var done = allChecked(o.salida.checklist);\n'+
+          '      if (status === "lista") { o.salida.status = "lista"; o.salida.listaAt = new Date().toISOString(); }\n'+
+          '      else if (any || done) { o.salida.status = "preparando"; }\n'+
+          '      else { o.salida.status = "pendiente"; }\n'+
+          '      if (!save(o)) { writeMsg("No se pudo guardar (storage)."); return; }\n'+
+          '      writeMsg(status === "lista" ? "Marcada como LISTA para entrega." : "Progreso guardado.");\n'+
+          '      try { if (window.opener && !window.opener.closed) { window.opener.location.reload(); } } catch(e) {}\n'+
+          '    }\n'+
+          '    var btnSave = document.getElementById("salida_save");\n'+
+          '    if (btnSave) btnSave.addEventListener("click", function(){ update("preparando"); });\n'+
+          '    var btnReady = document.getElementById("salida_ready");\n'+
+          '    if (btnReady) btnReady.addEventListener("click", function(){ update("lista"); });\n'+
+          '    hydrate();\n'+
+          '  } catch(e) {}\n'+
+          '})();'+
+          '<\/script>'
+          ) : '')+
+        '</body>'+
+        '</html>'
+      );
+      w.document.close();
+    }
+
+    function rl_openRecepcionDoc(orderData){
+      const w = window.open('about:blank', '_blank');
+      if (!w) return;
+      const baseHref = String(location.href).replace(/[^/]*$/, '');
+      const orderId = (orderData && orderData.orderId) ? orderData.orderId : '';
+      const r = rl_findLatestRecepcion(orderId);
+
+      const title = 'Recepción';
+      const cliente = rl_escape((orderData && orderData.cliente) ? orderData.cliente : '—');
+      const obra = rl_escape((orderData && orderData.obra) ? orderData.obra : '—');
+      const fecha = rl_escape((r && r.fecha) ? r.fecha : '—');
+      const inspector = rl_escape((r && r.inspector) ? r.inspector : '—');
+      const almacen = rl_escape((r && r.almacen) ? r.almacen : '—');
+      const resumen = (r && r.resumen) ? r.resumen : {};
+
+      const items = Array.isArray(r && r.items) ? r.items : [];
+      const itemRows = items.map((it) => {
+        const serie = rl_escape((it && it.serie) ? it.serie : '');
+        const tipo = rl_escape((it && it.tipo) ? it.tipo : '');
+        const estado = rl_escape((it && it.estado) ? it.estado : '');
+        const notas = rl_escape((it && it.notas) ? it.notas : '');
+        const cargoVal = (it && it.cargo !== undefined && it.cargo !== null && String(it.cargo) !== '') ? rl_moneyAny(it.cargo) : '';
+        const cargo = rl_escape(String(cargoVal));
+        return '<tr><td>'+serie+'</td><td>'+tipo+'</td><td>'+estado+'</td><td>'+notas+'</td><td style="text-align:right;">'+cargo+'</td></tr>';
+      }).join('');
+
+      w.document.write(
+        '<!doctype html>'+
+        '<html lang="es">'+
+        '<head>'+
+          '<meta charset="utf-8" />'+
+          '<meta name="viewport" content="width=device-width, initial-scale=1" />'+
+          '<title>'+title+' · '+rl_escape(orderId || '—')+' | andamios.com</title>'+
+          '<base href="'+rl_escape(baseHref)+'" />'+
+          '<link rel="icon" href="img/icon.png" />'+
+          '<link rel="stylesheet" href="style.css" />'+
+        '</head>'+
+        '<body>'+
+          '<header class="hero">'+
+            '<div class="container hero-inner">'+
+              '<a class="brand" href="rentlist.html">'+
+                '<img class="brand-logo" src="img/logo.png" alt="andamios.com" />'+
+                '<span class="brand-name">andamios.com</span>'+
+              '</a>'+
+              '<nav><button class="btn" type="button" onclick="window.close()">Cerrar</button></nav>'+
+            '</div>'+
+          '</header>'+
+          '<main class="container">'+
+            '<h1>Recepción</h1>'+
+            '<p class="muted">Orden '+rl_escape(orderId || '—')+'</p>'+
+            '<section class="grid" style="margin-top:12px;">'+
+              '<div class="card span-6">'+
+                '<h2>Cliente y obra</h2>'+
+                '<div class="muted"><strong>Cliente:</strong> '+cliente+'</div>'+
+                '<div class="muted"><strong>Obra:</strong> '+obra+'</div>'+
+              '</div>'+
+              '<div class="card span-6">'+
+                '<h2>Recepción</h2>'+
+                '<div class="muted"><strong>Fecha:</strong> '+fecha+'</div>'+
+                '<div class="muted"><strong>Inspector:</strong> '+inspector+'</div>'+
+                '<div class="muted"><strong>Almacén:</strong> '+almacen+'</div>'+
+              '</div>'+
+              '<div class="card span-12">'+
+                '<h2>Resumen</h2>'+
+                '<div class="muted"><strong>OK:</strong> '+rl_escape(String(resumen.ok || 0))+' &nbsp; <strong>Daño:</strong> '+rl_escape(String(resumen.danio || 0))+' &nbsp; <strong>Pérdida:</strong> '+rl_escape(String(resumen.perdida || 0))+' &nbsp; <strong>Sustitución:</strong> '+rl_escape(String(resumen.sustitucion || 0))+' &nbsp; <strong>Cargos:</strong> '+rl_escape((resumen.cargos !== undefined && resumen.cargos !== null && String(resumen.cargos) !== '') ? rl_moneyAny(resumen.cargos) : '—')+'</div>'+
+              '</div>'+
+              '<div class="card span-12">'+
+                '<h2>Items inspeccionados</h2>'+
+                (r ? '' : '<div class="muted">No hay recepción guardada para esta orden en este dispositivo.</div>')+
+                '<div style="overflow:auto;">'+
+                  '<table>'+
+                    '<thead><tr><th>Serie</th><th>Tipo</th><th>Estado</th><th>Notas</th><th style="text-align:right;">Cargo</th></tr></thead>'+
+                    '<tbody>'+
+                      (itemRows || '<tr><td colspan="5" class="muted">Sin items</td></tr>')+
+                    '</tbody>'+
+                  '</table>'+
+                '</div>'+
+              '</div>'+
+            '</section>'+
+          '</main>'+
+        '</body>'+
+        '</html>'
+      );
+      w.document.close();
+    }
 
     function rl_render(){
       ordersBody.innerHTML = '';
@@ -133,8 +673,9 @@ document.addEventListener('DOMContentLoaded', () => {
           <td>${rl_escape(total)}</td>
           <td>${rl_state(data)}</td>
           <td style="white-space:nowrap;">
-            <button class="btn" data-action="view" data-key="${key}">Ver</button>
-            <button class="btn" data-action="download" data-key="${key}">Descargar</button>
+            <button class="btn" data-action="doc-cot" data-key="${key}">Cotización</button>
+            <button class="btn" data-action="doc-contrato" data-key="${key}">Contrato</button>
+            <button class="btn" data-action="doc-salida" data-key="${key}">Salida</button>
             <button class="btn" data-action="delete" data-key="${key}">Eliminar</button>
           </td>
         `;
@@ -150,143 +691,19 @@ document.addEventListener('DOMContentLoaded', () => {
       const raw = localStorage.getItem(key);
       if (!raw) return;
       const data = rl_safeParse(raw);
-      if (action === 'view'){
-        const w = window.open('about:blank', '_blank');
-        if (w) {
-          const baseHref = String(location.href).replace(/[^/]*$/, '');
-          const partidas = Array.isArray(data && data.partidas) ? data.partidas : [];
-          const partidasRows = partidas.map((p) => {
-            const sets = (p && (p.sets !== undefined && p.sets !== null)) ? p.sets : '';
-            const unidades = (p && (p.unidades !== undefined && p.unidades !== null)) ? p.unidades : '';
-            const dias = (p && (p.dias !== undefined && p.dias !== null)) ? p.dias : '';
-            const tarifa = (p && (p.tarifa !== undefined && p.tarifa !== null)) ? p.tarifa : '';
-            const cantidad = (p && (p.cantidad !== undefined && p.cantidad !== null)) ? p.cantidad : '';
-            const desc = rl_escape((p && p.descripcion) ? p.descripcion : '—');
-            const tipo = rl_escape((p && p.tipo) ? p.tipo : '—');
-            return (
-              '<tr>'+
-                '<td>'+rl_escape(String(sets))+'</td>'+
-                '<td>'+tipo+'</td>'+
-                '<td>'+desc+'</td>'+
-                '<td>'+rl_escape(String(unidades))+'</td>'+
-                '<td>'+rl_escape(String(dias))+'</td>'+
-                '<td>'+rl_escape(String(tarifa))+'</td>'+
-                '<td>'+rl_escape(String(cantidad))+'</td>'+
-              '</tr>'
-            );
-          }).join('');
-
-          const orderId = rl_escape((data && data.orderId) ? data.orderId : '—');
-          const cliente = rl_escape((data && data.cliente) ? data.cliente : '—');
-          const obra = rl_escape((data && data.obra) ? data.obra : '—');
-          const inicio = rl_escape((data && data.inicio) ? data.inicio : '—');
-          const fin = rl_escape((data && data.fin) ? data.fin : '—');
-          const ubicacion = rl_escape((data && data.ubicacion) ? data.ubicacion : '—');
-          const deposito = rl_escape(String((data && data.deposito !== undefined && data.deposito !== null) ? data.deposito : '—'));
-          const tipoPagoDeposito = rl_escape((data && data.tipoPagoDeposito) ? data.tipoPagoDeposito : '—');
-          const subtotal = rl_escape((data && data.totales && data.totales.subtotal) ? data.totales.subtotal : '—');
-          const transporte = rl_escape((data && data.totales && data.totales.transporte) ? data.totales.transporte : '—');
-          const iva = rl_escape((data && data.totales && data.totales.iva) ? data.totales.iva : '—');
-          const total = rl_escape((data && data.totales && data.totales.total) ? data.totales.total : '—');
-
-          w.document.write(
-            '<!doctype html>'+
-            '<html lang="es">'+
-            '<head>'+
-              '<meta charset="utf-8" />'+
-              '<meta name="viewport" content="width=device-width, initial-scale=1" />'+
-              '<title>Orden '+orderId+' | andamios.com</title>'+
-              '<base href="'+rl_escape(baseHref)+'" />'+
-              '<link rel="icon" href="img/icon.png" />'+
-              '<link rel="stylesheet" href="style.css" />'+
-            '</head>'+
-            '<body>'+
-              '<header class="hero">'+
-                '<div class="container hero-inner">'+
-                  '<a class="brand" href="rentlist.html">'+
-                    '<img class="brand-logo" src="img/logo.png" alt="andamios.com" />'+
-                    '<span class="brand-name">andamios.com</span>'+
-                  '</a>'+
-                  '<nav>'+
-                    '<button class="btn" type="button" onclick="window.close()">Cerrar</button>'+
-                  '</nav>'+
-                '</div>'+
-              '</header>'+
-
-              '<main class="container">'+
-                '<h1>Orden '+orderId+'</h1>'+
-                '<p class="muted">Vista de detalle</p>'+
-
-                '<section class="grid" style="margin-top:12px;">'+
-                  '<div class="card span-6">'+
-                    '<h2>Cliente y obra</h2>'+
-                    '<div class="muted"><strong>Cliente:</strong> '+cliente+'</div>'+
-                    '<div class="muted"><strong>Obra:</strong> '+obra+'</div>'+
-                    '<div class="muted"><strong>Inicio:</strong> '+inicio+'</div>'+
-                    '<div class="muted"><strong>Fin:</strong> '+fin+'</div>'+
-                  '</div>'+
-                  '<div class="card span-6">'+
-                    '<h2>Ubicación y depósito</h2>'+
-                    '<div class="muted"><strong>Ubicación:</strong> '+ubicacion+'</div>'+
-                    '<div class="muted"><strong>Depósito:</strong> '+deposito+'</div>'+
-                    '<div class="muted"><strong>Tipo de pago:</strong> '+tipoPagoDeposito+'</div>'+
-                  '</div>'+
-
-                  '<div class="card span-12">'+
-                    '<h2>Partidas</h2>'+
-                    '<div style="overflow:auto;">'+
-                      '<table>'+
-                        '<thead>'+
-                          '<tr>'+
-                            '<th>Cantidad</th>'+
-                            '<th>Tipo</th>'+
-                            '<th>Descripción</th>'+
-                            '<th>Unidades</th>'+
-                            '<th>Días</th>'+
-                            '<th>Tarifa</th>'+
-                            '<th>Total piezas</th>'+
-                          '</tr>'+
-                        '</thead>'+
-                        '<tbody>'+
-                          (partidasRows || '<tr><td colspan="7" class="muted">Sin partidas</td></tr>')+
-                        '</tbody>'+
-                      '</table>'+
-                    '</div>'+
-                  '</div>'+
-
-                  '<div class="card span-12">'+
-                    '<h2>Totales</h2>'+
-                    '<div style="overflow:auto;">'+
-                      '<table>'+
-                        '<tbody>'+
-                          '<tr><td class="muted">Subtotal</td><td style="text-align:right;"><strong>'+subtotal+'</strong></td></tr>'+
-                          '<tr><td class="muted">Transporte</td><td style="text-align:right;">'+transporte+'</td></tr>'+
-                          '<tr><td class="muted">IVA</td><td style="text-align:right;">'+iva+'</td></tr>'+
-                          '<tr><td><strong>Total</strong></td><td style="text-align:right;"><strong>'+total+'</strong></td></tr>'+
-                        '</tbody>'+
-                      '</table>'+
-                    '</div>'+
-                  '</div>'+
-                '</section>'+
-              '</main>'+
-            '</body>'+
-            '</html>'
-          );
-          w.document.close();
-        }
-      } else if (action === 'download'){
-        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url; a.download = ((data && data.orderId) || key)+'.json';
-        document.body.appendChild(a); a.click(); a.remove();
-        URL.revokeObjectURL(url);
+      if (action === 'doc-cot'){
+        rl_openOrderDoc(data, 'cot', key);
+      } else if (action === 'doc-contrato'){
+        rl_openOrderDoc(data, 'contrato', key);
+      } else if (action === 'doc-salida'){
+        rl_openOrderDoc(data, 'salida', key);
       } else if (action === 'delete'){
         if (confirm('¿Eliminar esta orden?')){
           try { localStorage.removeItem(key); } catch (e) {}
           rl_render();
         }
       }
+      try { maybeAutoSetTransport(); } catch (e) {}
     }
 
     document.addEventListener('click', rl_handle);
@@ -630,17 +1047,12 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!initial && descArea) autoResize(descArea);
       recalc();
       updateExistenciaHint();
+      try { maybeAutoSetTransport(); } catch (e) {}
       return tr;
     }
 
     if (btnAgregar) btnAgregar.addEventListener('click', () => addRow());
-    if (transporteInput) {
-      transporteInput.addEventListener('input', () => {
-        transporteInput.dataset.manual = '1';
-        recalc();
-      });
-      transporteInput.addEventListener('blur', () => { formatTransport(); });
-    }
+
     if (depositoEl) depositoEl.addEventListener('input', () => {
       // validar contra mínimo
       const total = parseMoney((totalEl && totalEl.textContent) ? totalEl.textContent : '0');
@@ -1000,6 +1412,7 @@ document.addEventListener('DOMContentLoaded', () => {
           });
           if (tr) tr.dataset.itemIndex = String(parseInt(sel, 10));
         }
+        try { maybeAutoSetTransport(); } catch (e) {}
       });
     }
 
@@ -1040,25 +1453,35 @@ document.addEventListener('DOMContentLoaded', () => {
       return total;
     }
 
-    function estimateTransport(){
-      // Parámetros de tarificación
-      const KM_RATE = 12; // $/km gasolina
-      const BASE_TRIP = 150; // base por viaje
-      const PER_ITEM = 2.5; // manejo por pieza/conjunto
-      const PERSON_RATE = 120; // $/hora por persona
-      const AVG_SPEED = 35; // km/h
+    function hasEquipoConjunto(){
+      if (!partidasBody) return false;
+      const rows = partidasBody.querySelectorAll('tr');
+      for (let i = 0; i < rows.length; i++) {
+        const t = rows[i] && rows[i].dataset ? rows[i].dataset.tipo : '';
+        if (t === 'conjunto') return true;
+      }
+      return false;
+    }
 
-      const lat = parseFloat((latInput && latInput.value) ? latInput.value : '');
-      const lon = parseFloat((lonInput && lonInput.value) ? lonInput.value : '');
-      if (!Number.isFinite(lat) || !Number.isFinite(lon)) return 0;
-      const dist = haversineKm(WAREHOUSE.lat, WAREHOUSE.lon, lat, lon);
-      const items = countTotalItems();
-      const trip = BASE_TRIP + KM_RATE * (dist * 2); // ida y vuelta
-      const handling = PER_ITEM * items;
-      const travelHours = (dist * 2) / AVG_SPEED; // round-trip
-      const loadingHours = Math.min(2, Math.max(0.5, items * 0.02)); // 1.2 min por item, tope 2h
-      const labor = (travelHours + loadingHours) * (PERSON_RATE * 2); // 2 personas
-      return Math.max(0, Math.round((trip + handling + labor) * 100) / 100);
+    function carretaFee(){
+      // Configurable: localStorage.setItem('carreta_fee','350')
+      // Default conservador
+      let v = 350;
+      try {
+        const raw = localStorage.getItem('carreta_fee');
+        if (raw !== null && raw !== undefined && String(raw) !== '') {
+          const n = parseFloat(String(raw).replace(/[^0-9,.-]/g, '').replace(/,/g, ''));
+          if (isFinite(n)) v = n;
+        }
+      } catch (e) {}
+      return Math.max(0, Math.round(v * 100) / 100);
+    }
+
+    function estimateTransport(){
+      // Regla nueva: el cliente recoge; no hay envíos.
+      // Solo se cobra carreta cuando se renta un equipo/conjunto.
+      if (!hasEquipoConjunto()) return 0;
+      return carretaFee();
     }
 
     function maybeAutoSetTransport(){
@@ -1073,14 +1496,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
 
-    // Reactualizar estimado cuando cambien ubicación, partidas o fechas (por si días cambian tiempos)
-    if (latInput) latInput.addEventListener('change', maybeAutoSetTransport);
-    if (lonInput) lonInput.addEventListener('change', maybeAutoSetTransport);
-    if (partidasBody) partidasBody.addEventListener('input', maybeAutoSetTransport);
-    if (inicioInput) inicioInput.addEventListener('change', maybeAutoSetTransport);
-    if (finInput) finInput.addEventListener('change', maybeAutoSetTransport);
-    // Inicial
-    maybeAutoSetTransport();
+    // Transporte/carreta ya no se captura en UI; si el campo no existe, se omite.
 
     // Folio consecutivo de orden
     function nextOrderFolio() {
@@ -1244,6 +1660,7 @@ document.addEventListener('DOMContentLoaded', () => {
         deposito: parseFloat(((ordenForm && ordenForm.deposito) ? ordenForm.deposito.value : 0) || 0),
         tipoPagoDeposito: (ordenForm && ordenForm.tipoPagoDeposito) ? ordenForm.tipoPagoDeposito.value : undefined,
         observaciones: (ordenForm && ordenForm.observaciones) ? ordenForm.observaciones.value : undefined,
+        movimientos: [],
         partidas: Array.from((partidasBody && partidasBody.querySelectorAll) ? partidasBody.querySelectorAll('tr') : []).map(tr => ({
           tipo: tr.dataset.tipo,
           descripcion: (tr.querySelector('.desc') ? tr.querySelector('.desc').value : undefined),
@@ -1261,7 +1678,7 @@ document.addEventListener('DOMContentLoaded', () => {
         })(),
         totales: {
           subtotal: (subtotalEl && subtotalEl.textContent) ? subtotalEl.textContent : undefined,
-          transporte: (transporteInput && transporteInput.value) ? transporteInput.value : undefined,
+          transporte: (transporteInput && transporteInput.value) ? transporteInput.value : '$ 0.00',
           iva: (ivaEl && ivaEl.textContent) ? ivaEl.textContent : undefined,
           total: (totalEl && totalEl.textContent) ? totalEl.textContent : undefined
         }
@@ -1311,6 +1728,9 @@ document.addEventListener('DOMContentLoaded', () => {
   // =====================
   const recepForm = document.getElementById('recepForm');
   if (recepForm) {
+    const recepQueueSelect = document.getElementById('recepQueueSelect');
+    const recepQueueDetail = document.getElementById('recepQueueDetail');
+    const recepQueueList = document.getElementById('recepQueueList');
     const itemsBody = document.getElementById('itemsBody');
     const addItemBtn = document.getElementById('addItem');
     const tOk = document.getElementById('tOk');
@@ -1320,6 +1740,96 @@ document.addEventListener('DOMContentLoaded', () => {
     const tCargo = document.getElementById('tCargo');
 
     function money(n){ return new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(n||0); }
+
+    function safeParse(raw){ try { return JSON.parse(raw); } catch (e) { return null; } }
+    function parseDateISO(s){
+      if (!s) return null;
+      const d = new Date(String(s));
+      return isNaN(d.getTime()) ? null : d;
+    }
+    function ymd(d){
+      if (!d) return '';
+      try { return new Date(d).toISOString().slice(0,10); } catch (e) { return ''; }
+    }
+
+    function computeQueue(){
+      const keys = Object.keys(localStorage).filter(k => k.startsWith('orden_')).sort();
+      const out = [];
+      const today = new Date();
+      today.setHours(0,0,0,0);
+      for (let i = 0; i < keys.length; i++) {
+        const raw = localStorage.getItem(keys[i]);
+        if (!raw) continue;
+        const o = safeParse(raw);
+        if (!o) continue;
+        const fin = parseDateISO(o.fin);
+        if (!fin) continue;
+        fin.setHours(0,0,0,0);
+        const diffDays = Math.round((fin.getTime() - today.getTime()) / 86400000);
+        out.push({
+          key: keys[i],
+          orderId: (o && o.orderId) ? String(o.orderId) : '',
+          cliente: (o && o.cliente) ? String(o.cliente) : '',
+          obra: (o && o.obra) ? String(o.obra) : '',
+          fin: fin,
+          diffDays: diffDays
+        });
+      }
+      // vencidas primero (más atrasadas arriba), luego próximas
+      out.sort((a,b) => {
+        if (a.diffDays < 0 && b.diffDays >= 0) return -1;
+        if (a.diffDays >= 0 && b.diffDays < 0) return 1;
+        return a.fin.getTime() - b.fin.getTime();
+      });
+      return out;
+    }
+
+    function renderQueue(){
+      if (!recepQueueSelect) return;
+      const q = computeQueue();
+      recepQueueSelect.innerHTML = '<option value="">Seleccionar…</option>';
+      let listHtml = '';
+      for (let i = 0; i < q.length; i++) {
+        const it = q[i];
+        const tag = (it.diffDays < 0) ? ('Vencida ' + String(Math.abs(it.diffDays)) + 'd') : (it.diffDays === 0 ? 'Hoy' : ('En ' + String(it.diffDays) + 'd'));
+        const label = (it.orderId || '—') + ' · ' + (it.cliente || '—') + ' · fin ' + ymd(it.fin) + ' · ' + tag;
+        const opt = document.createElement('option');
+        opt.value = it.orderId || '';
+        opt.textContent = label;
+        opt.setAttribute('data-key', it.key);
+        opt.setAttribute('data-cliente', it.cliente);
+        opt.setAttribute('data-obra', it.obra);
+        opt.setAttribute('data-fin', ymd(it.fin));
+        opt.setAttribute('data-tag', tag);
+        recepQueueSelect.appendChild(opt);
+        listHtml += '<div style="padding:6px 0; border-bottom:1px solid var(--line);">' +
+          '<strong>'+label.replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</strong>' +
+        '</div>';
+      }
+      if (recepQueueList) {
+        recepQueueList.innerHTML = listHtml || '<div class="muted">No hay órdenes con fecha fin.</div>';
+      }
+    }
+
+    function applyQueueSelection(){
+      if (!recepQueueSelect) return;
+      const val = recepQueueSelect.value;
+      if (recepQueueDetail) recepQueueDetail.textContent = '—';
+      if (!val) return;
+      // llenar ordenId
+      if (recepForm && recepForm.ordenId) recepForm.ordenId.value = val;
+      const opt = recepQueueSelect.options[recepQueueSelect.selectedIndex];
+      if (opt && recepQueueDetail) {
+        const cliente = opt.getAttribute('data-cliente') || '—';
+        const obra = opt.getAttribute('data-obra') || '—';
+        const fin = opt.getAttribute('data-fin') || '—';
+        const tag = opt.getAttribute('data-tag') || '';
+        recepQueueDetail.textContent = cliente + ' · ' + obra + ' · fin ' + fin + (tag ? (' · ' + tag) : '');
+      }
+    }
+
+    renderQueue();
+    if (recepQueueSelect) recepQueueSelect.addEventListener('change', applyQueueSelection);
 
     function recalc(){
       let ok=0, danio=0, perdida=0, sust=0, cargo=0;

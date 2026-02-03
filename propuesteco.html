@@ -39,25 +39,26 @@
 
     <main class="container">
       <h1>Propuesta económica</h1>
-      <p class="muted">Sistema de gestión de renta de andamios — Control por pieza, cálculo por periodo, logística y trazabilidad.</p>
+      <p class="muted">Sistema de gestión de renta de andamios — Control por pieza, cotización y documentación, salida/recepción y trazabilidad.</p>
 
       <section class="grid" style="margin-top:12px;">
         <div class="card span-7">
           <h2>Resumen ejecutivo</h2>
           <p>
-            Presentamos un sistema web listo para operar que digitaliza el proceso de renta de andamios: captura de órdenes,
-            cálculo automático de importes por días, estimación de transporte con mapa interactivo, validación de existencias,
-            y panel de métricas en tiempo real. Desplegado en GitHub Pages, sin fricción de instalación, 100% navegable.
+            Presentamos un sistema web listo para operar que digitaliza el proceso de renta de andamios con un flujo claro:
+            <strong>cotización</strong> (captura y cálculo), <strong>generación de contrato</strong>, <strong>programación de salida</strong>
+            con checklist de almacén, y <strong>recepción e inspección</strong> con cargos y evidencia.
+            Desplegado como aplicación web, sin fricción de instalación, 100% navegable.
           </p>
         </div>
         <div class="card span-5">
           <h2>Ventajas clave</h2>
           <ul>
-            <li>Tiempo de cotización y generación de orden en minutos.</li>
+            <li>Tiempo de cotización y documentación en minutos.</li>
             <li>Menos errores: días y totales calculados automáticamente.</li>
-            <li>Logística eficiente: estimador de transporte por distancia y volumen.</li>
-            <li>Visibilidad: dashboard con ingresos, egresos y actividad.</li>
-            <li>Escalable: base lista para integrar Firestore más adelante.</li>
+            <li>Control operativo: checklist de salida para almacén y estatus por orden.</li>
+            <li>Recepción robusta: inspección por pieza, cargos y evidencia.</li>
+            <li>Visibilidad: dashboard con actividad y métricas.</li>
           </ul>
         </div>
 
@@ -66,15 +67,12 @@
           <div class="grid" style="gap:12px;">
             <div class="card span-4"><strong>Dashboard</strong><div class="muted">Equipos en renta, clientes, ingresos y egresos.</div></div>
 
-            <div class="card span-4"><strong>Órdenes con partidas</strong><div class="muted">Piezas y conjuntos con validación de existencia.</div></div>
-            <div class="card span-4"><strong>Cálculo por días</strong><div class="muted">Días según Inicio/Fin; importe por partida.</div></div>
-            <div class="card span-4"><strong>Transporte</strong><div class="muted">Estimador automático editable en MXN.</div></div>
-            <div class="card span-4"><strong>Depósito</strong><div class="muted">Validación de mínimo 50% del total o monto tabulado.</div></div>
-            <div class="card span-4"><strong>Mapa y dirección</strong><div class="muted">Leaflet + geocodificación lat/lon.</div></div>
-            <div class="card span-4"><strong>Lista de órdenes</strong><div class="muted">Ver, descargar, eliminar y exportar todo.</div></div>
-            <div class="card span-4"><strong>Persistencia local</strong><div class="muted">Opera 100% en el navegador (demo/producción inicial).</div></div>
-            <div class="card span-4"><strong>Mantenible</strong><div class="muted">CSS y JS centralizados para agilidad.</div></div>
-            <div class="card span-4"><strong>Despliegue seguro</strong><div class="muted">GitHub Pages con HTTPS.</div></div>
+            <div class="card span-4"><strong>Cotización</strong><div class="muted">Captura de orden, partidas (piezas/conjuntos), cálculo automático por periodo.</div></div>
+            <div class="card span-4"><strong>Contrato</strong><div class="muted">Generación automática del contrato a partir de la cotización.</div></div>
+            <div class="card span-4"><strong>Salida (almacén)</strong><div class="muted">Checklist y asignación a bodeguero/almacenista; estatus de preparación y “lista”.</div></div>
+            <div class="card span-4"><strong>Recepción e inspección</strong><div class="muted">Registro de devolución por pieza, estado, cargos y evidencia.</div></div>
+            <div class="card span-4"><strong>Dirección y operación</strong><div class="muted">Acceso por perfiles: dirección (visibilidad), almacén (salida), recepción (inspección).</div></div>
+            <div class="card span-4"><strong>Lista de órdenes</strong><div class="muted">Consulta con documentos (cotización/contrato/salida) e indicador de estatus.</div></div>
           </div>
         </div>
 
@@ -90,75 +88,31 @@
         <div class="card span-12">
           <h2>Inversión económica</h2>
           <div class="muted" style="margin-bottom:10px;">
-            Base: Realización $ 24,000.00 · Implementación (opcional) $ 12,000.00 · Licencia (obligatoria) $ 2,000.00/mes (o $ 24,000.00/año)
+            Inversión por el sistema solicitado, con el flujo completo: <strong>cotización → contrato → salida (almacén) → recepción</strong>.
           </div>
 
           <div class="grid" style="gap:12px;">
-            <div class="card span-4">
-              <h3 style="margin:0 0 6px;">Subtotal promoción</h3>
-              <div class="muted" style="margin-bottom:10px;">Realización + 6 meses de licencia sin costo</div>
+            <div class="card span-6">
+              <h3 style="margin:0 0 6px;">Inversión</h3>
+              <div class="muted" style="margin-bottom:10px;">Costo total del proyecto</div>
               <table>
                 <tbody>
-                  <tr><td class="muted">Realización</td><td style="text-align:right;"><strong>$ 24,000.00</strong></td></tr>
-                  <tr><td class="muted">Licencia 6 meses</td><td style="text-align:right;">$ 0.00</td></tr>
-                  <tr><td class="muted">Subtotal</td><td style="text-align:right;">$ 24,000.00</td></tr>
+                  <tr><td class="muted">Sistema (total)</td><td style="text-align:right;"><strong>$ 24,000.00</strong></td></tr>
                   <tr><td class="muted">IVA 16%</td><td style="text-align:right;">$ 3,840.00</td></tr>
                   <tr><td><strong>Total</strong></td><td style="text-align:right;"><strong>$ 27,840.00</strong></td></tr>
-                  <tr><td class="muted">Anticipo 50% realización</td><td style="text-align:right;">$ 12,000.00</td></tr>
                 </tbody>
               </table>
             </div>
-
-            <div class="card span-4">
-              <h3 style="margin:0 0 6px;">Subtotal 1</h3>
-              <div class="muted" style="margin-bottom:10px;">Realización + 1 año de licencia</div>
-              <table>
-                <tbody>
-                  <tr><td class="muted">Realización</td><td style="text-align:right;"><strong>$ 24,000.00</strong></td></tr>
-                  <tr><td class="muted">Licencia 1 año</td><td style="text-align:right;">$ 24,000.00</td></tr>
-                  <tr><td class="muted">Subtotal</td><td style="text-align:right;">$ 48,000.00</td></tr>
-                  <tr><td class="muted">IVA 16%</td><td style="text-align:right;">$ 7,680.00</td></tr>
-                  <tr><td><strong>Total</strong></td><td style="text-align:right;"><strong>$ 55,680.00</strong></td></tr>
-                  <tr><td class="muted">Anticipo 50% realización</td><td style="text-align:right;">$ 12,000.00</td></tr>
-                </tbody>
-              </table>
+            <div class="card span-6">
+              <h3 style="margin:0 0 6px;">Incluye</h3>
+              <ul style="margin-top:6px;">
+                <li>Generación de <strong>cotización</strong> y <strong>contrato</strong> a partir de la captura.</li>
+                <li>Formato de <strong>salida</strong> con asignación y checklist (estatus por orden).</li>
+                <li>Sección de <strong>recepción e inspección</strong> (cargos, evidencia y trazabilidad).</li>
+                <li>Ajustes de UX para tablet/teléfono y operación diaria.</li>
+              </ul>
+              <div class="muted" style="margin-top:10px;"><strong>No incluye</strong> (se cotiza por separado): infraestructura, integraciones externas, módulos nuevos y roles avanzados.</div>
             </div>
-
-            <div class="card span-4">
-              <h3 style="margin:0 0 6px;">Subtotal 2</h3>
-              <div class="muted" style="margin-bottom:10px;">Realización + implementación + 1 año de licencia</div>
-              <table>
-                <tbody>
-                  <tr><td class="muted">Realización</td><td style="text-align:right;"><strong>$ 24,000.00</strong></td></tr>
-                  <tr><td class="muted">Implementación</td><td style="text-align:right;">$ 12,000.00</td></tr>
-                  <tr><td class="muted">Licencia 1 año</td><td style="text-align:right;">$ 24,000.00</td></tr>
-                  <tr><td class="muted">Subtotal</td><td style="text-align:right;">$ 60,000.00</td></tr>
-                  <tr><td class="muted">IVA 16%</td><td style="text-align:right;">$ 9,600.00</td></tr>
-                  <tr><td><strong>Total</strong></td><td style="text-align:right;"><strong>$ 69,600.00</strong></td></tr>
-                  <tr><td class="muted">Anticipo 50% realización</td><td style="text-align:right;">$ 12,000.00</td></tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          <div class="muted" style="margin-top:10px;">
-            <div style="margin-bottom:8px;">La <strong>licencia mensual es obligatoria</strong> y se factura de manera recurrente. <strong>Costo anual de licencia: $ 24,000.00 MXN</strong>. Puede pagarse <strong>mes a mes</strong> o en un <strong>solo pago anual</strong>. En la <strong>promoción</strong>, a partir del mes 7 la licencia se factura a <strong>$ 2,000.00 MXN/mes</strong> o <strong>$ 24,000.00 MXN/año</strong>. La <strong>implementación es opcional</strong>: el sistema puede operar en GitHub Pages/Firestore de forma inmediata sin servidor propio.</div>
-
-            <div style="margin-top:10px;"><strong>¿Qué incluye la licencia ($ 2,000.00 MXN/mes)?</strong></div>
-            <ul style="margin-top:6px;">
-              <li><strong>Soporte operativo</strong> para dudas de uso (captura de órdenes, recepciones, exportación, etc.).</li>
-              <li><strong>Mantenimiento correctivo</strong>: corrección de fallas/errores del sistema sin costo adicional.</li>
-              <li><strong>Actualizaciones menores</strong> (mejoras de UX, ajustes de validaciones, afinación de reportes existentes).</li>
-              <li><strong>Revisión y asistencia</strong> en despliegue cuando se requiera publicar una actualización (GitHub Pages).</li>
-              <li><strong>Respaldo/continuidad</strong> del proyecto: seguimiento para mantenerlo operable y compatible con navegadores actuales.</li>
-            </ul>
-
-            <div style="margin-top:10px;"><strong>No incluye</strong> (se cotiza por separado):</div>
-            <ul style="margin-top:6px;">
-              <li><strong>Nuevos módulos</strong> o cambios de alcance (p. ej., multi-sucursal, roles avanzados, app móvil completa, RFID).</li>
-              <li><strong>Integraciones</strong> con ERP/contabilidad/pagos o automatizaciones externas.</li>
-              <li><strong>Infraestructura del cliente</strong> (servidor propio, dominio, correo corporativo) y configuraciones asociadas.</li>
-            </ul>
           </div>
         </div>
         <div class="card span-5">

@@ -128,17 +128,7 @@
             </div>
             <div>
               <label for="ubicacion">Ubicación</label>
-              <input id="ubicacion" name="ubicacion" placeholder="Dirección / Frente" />
-            </div>
-          </div>
-          <div class="row">
-            <div>
-              <label for="latitud">Latitud</label>
-              <input id="latitud" name="latitud" placeholder="19.4326" />
-            </div>
-            <div>
-              <label for="longitud">Longitud</label>
-              <input id="longitud" name="longitud" placeholder="-99.1332" />
+              <textarea id="ubicacion" name="ubicacion" rows="3" placeholder="Dirección / Frente"></textarea>
             </div>
           </div>
           
@@ -156,7 +146,7 @@
 
         <section class="card span-12">
           <h2>Partidas (piezas / conjuntos)</h2>
-          <div class="row partidas-controls" style="align-items:end;">
+          <div class="row partidas-controls" style="align-items:flex-start;">
             <div>
               <label for="tipoPartida">Tipo</label>
               <select id="tipoPartida">
@@ -211,13 +201,6 @@
                 <tr>
                   <td colspan="5" style="text-align:right;">Subtotal</td>
                   <td id="subtotal">$ 0.00</td>
-                  <td></td>
-                </tr>
-                <tr>
-                  <td colspan="5" style="text-align:right;">Transporte (carga y descarga)</td>
-                  <td>
-                    <input id="transporteInput" type="text" inputmode="decimal" placeholder="$ 0.00" value="$ 0.00" />
-                  </td>
                   <td></td>
                 </tr>
                 <tr>
